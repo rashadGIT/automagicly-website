@@ -1,0 +1,188 @@
+{
+  "name": "AutoMagicly - Booking Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-booking",
+      "name": "Webhook - Booking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "automagicly-booking"
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "operation": "event",
+        "calendarId": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list",
+          "cachedResultName": "Primary"
+        },
+        "start": "={{ $json.dateTime }}",
+        "end": "={{ new Date(new Date($json.dateTime).getTime() + 30 * 60000).toISOString() }}",
+        "summary": "=AI Audit - {{ $json.name }} ({{ $json.company }})",
+        "description": "=Client: {{ $json.name }}\nCompany: {{ $json.company }}\nEmail: {{ $json.email }}\nNotes: {{ $json.notes }}\n\nBooked via AutoMagicly website",
+        "attendees": "={{ $json.email }}",
+        "sendUpdates": "all",
+        "conferenceData": "addConferenceData",
+        "options": {
+          "timeZone": "={{ $json.timezone }}"
+        }
+      },
+      "id": "google-calendar",
+      "name": "Google Calendar - Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "={{ $json.email }}",
+        "subject": "Your AI Audit is Confirmed! 🎉",
+        "emailType": "html",
+        "message": "=<h2>Hi {{ $json.name }},</h2>\n\n<p>Your AI Audit has been confirmed! 🎉</p>\n\n<div style=\"background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 20px 0;\">\n  <h3>Booking Details:</h3>\n  <p><strong>Date:</strong> {{ $json.date }}</p>\n  <p><strong>Time:</strong> {{ $json.time }} ({{ $json.timezone }})</p>\n  <p><strong>Duration:</strong> 30 minutes</p>\n  <p><strong>Meeting Link:</strong> <a href=\"{{ $node[\"Google Calendar - Create Event\"].json.hangoutLink }}\">Join Google Meet</a></p>\n</div>\n\n<h3>What to Expect:</h3>\n<ul>\n  <li>We'll review your current workflows</li>\n  <li>Identify automation opportunities</li>\n  <li>Discuss estimated time savings</li>\n  <li>Answer all your questions</li>\n</ul>\n\n<h3>Before the Call:</h3>\n<p>Think about:</p>\n<ul>\n  <li>Which tasks take the most time</li>\n  <li>What tools you currently use</li>\n  <li>Your biggest pain points</li>\n</ul>\n\n<p><strong>Add to Calendar:</strong> A calendar invite has been sent to you separately.</p>\n\n<hr>\n\n<p>Questions? Reply to this email or visit our FAQ: https://automagicly.com#faq</p>\n\n<p>See you soon!<br>\nThe AutoMagicly Team</p>",
+        "options": {
+          "ccList": "your-email@automagicly.com"
+        }
+      },
+      "id": "gmail-confirmation",
+      "name": "Gmail - Send Confirmation",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [650, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#bookings",
+        "text": "=🎯 *New AI Audit Booked!*\n\n*Client:* {{ $json.name }}\n*Company:* {{ $json.company }}\n*Email:* {{ $json.email }}\n*Date/Time:* {{ $json.dateTime }} {{ $json.timezone }}\n*Notes:* {{ $json.notes }}\n\n*Calendar:* {{ $node[\"Google Calendar - Create Event\"].json.htmlLink }}\n*Meet Link:* {{ $node[\"Google Calendar - Create Event\"].json.hangoutLink }}",
+        "otherOptions": {}
+      },
+      "id": "slack-notification",
+      "name": "Slack - Notify Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [650, 400],
+      "credentials": {
+        "slackApi": {
+          "id": "3",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "firstname": "={{ $json.name.split(' ')[0] }}",
+          "lastname": "={{ $json.name.split(' ').slice(1).join(' ') }}",
+          "company": "={{ $json.company }}",
+          "lifecyclestage": "lead",
+          "hs_lead_status": "NEW",
+          "notes": "={{ $json.notes }}",
+          "booking_date": "={{ $json.dateTime }}",
+          "lead_source": "Website Booking"
+        }
+      },
+      "id": "hubspot-crm",
+      "name": "HubSpot - Add Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [650, 600],
+      "credentials": {
+        "hubspotApi": {
+          "id": "4",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Booking confirmed! Check your email for details.\", \"bookingId\": $node[\"Google Calendar - Create Event\"].json.id } }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Booking": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar - Create Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar - Create Event": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Send Confirmation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack - Notify Team",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HubSpot - Add Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Send Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "automagicly-booking",
+  "meta": {
+    "instanceId": "automagicly"
+  },
+  "tags": []
+}
