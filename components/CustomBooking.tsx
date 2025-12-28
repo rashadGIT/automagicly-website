@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, User, Mail, Building2, CheckCircle, Zap } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import { format, addDays, setHours, setMinutes, isBefore, startOfDay, isWeekend } from 'date-fns';
 import 'react-day-picker/dist/style.css';
-import { sendToN8N } from '@/lib/utils';
+import { sendToN8N, fetchBusyDates } from '@/lib/utils';
 
 const BOOKING_WEBHOOK = process.env.NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL;
 
@@ -16,6 +16,27 @@ const TIME_SLOTS = [
   '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
   '16:00', '16:30'
 ];
+
+function toAmPm(time24 : string): string {
+  const [h, m] = time24.split(':');
+  const date = new Date();
+  date.setHours(h, m);
+
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+// Get timezone abbreviation (e.g., "EST", "CST", "PST")
+function getTimezoneAbbr(): string {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const date = new Date();
+  const timeString = date.toLocaleTimeString('en-US', { timeZone: timezone, timeZoneName: 'short' });
+  const match = timeString.match(/\b[A-Z]{3,4}\b/);
+  return match ? match[0] : timezone;
+}
 
 interface BookingData {
   name: string;
@@ -32,6 +53,8 @@ export default function CustomBooking() {
   const [selectedTime, setSelectedTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [busyDates, setBusyDates] = useState<Date[]>([]);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(true);
 
   const [formData, setFormData] = useState<BookingData>({
     name: '',
@@ -42,11 +65,29 @@ export default function CustomBooking() {
     notes: ''
   });
 
-  // Disable past dates and weekends
+  // Fetch busy dates from calendar on component mount
+  useEffect(() => {
+    const loadBusyDates = async () => {
+      setIsLoadingCalendar(true);
+      const dates = await fetchBusyDates();
+      setBusyDates(dates);
+      setIsLoadingCalendar(false);
+    };
+
+    console.log("Loading busy dates", busyDates);
+
+    loadBusyDates();
+  }, []);
+
+  console.log("Busy dates:", busyDates);
+  // Disable past dates, weekends, and busy dates from calendar
   const disabledDays = [
     { before: addDays(new Date(), 1) },
-    { dayOfWeek: [0, 6] } // Sunday and Saturday
+    { dayOfWeek: [] }, // Sunday and Saturday
+    ...busyDates // Dates when you have calendar events
   ];
+  
+  console.log("Disabled days:", disabledDays);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelected(date);
@@ -67,12 +108,36 @@ export default function CustomBooking() {
     setIsSubmitting(true);
 
     try {
+      // Get user's timezone
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      // Create a proper datetime object with timezone
+      let dateTimeISO = '';
+      let dateTimeFormatted = '';
+
+      if (selected && selectedTime) {
+        // Parse the time (e.g., "09:00")
+        const [hours, minutes] = selectedTime.split(':');
+
+        // Create a date object in the user's local timezone
+        const bookingDateTime = new Date(selected);
+        bookingDateTime.setHours(parseInt(hours, 10));
+        bookingDateTime.setMinutes(parseInt(minutes, 10));
+        bookingDateTime.setSeconds(0);
+        bookingDateTime.setMilliseconds(0);
+
+        // Get ISO string (includes timezone offset)
+        dateTimeISO = bookingDateTime.toISOString();
+
+        // Also format as readable string for n8n
+        dateTimeFormatted = `${format(selected, 'yyyy-MM-dd')} ${selectedTime} ${userTimezone}`;
+      }
+
       const bookingData = {
         ...formData,
-        dateTime: selected && selectedTime
-          ? `${format(selected, 'yyyy-MM-dd')} ${selectedTime}`
-          : '',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        dateTime: dateTimeFormatted,
+        dateTimeISO: dateTimeISO, // Proper ISO format with timezone
+        timezone: userTimezone,
         type: 'AI Audit Booking'
       };
 
@@ -104,9 +169,12 @@ export default function CustomBooking() {
         <p className="text-lg text-gray-600 mb-2">
           Your AI Audit is scheduled for:
         </p>
-        <div className="text-2xl font-bold gradient-text mb-6">
-          {selected && format(selected, 'EEEE, MMMM d, yyyy')} at {selectedTime}
+        <div className="text-2xl font-bold gradient-text mb-2">
+          {selected && format(selected, 'EEEE, MMMM d, yyyy')} at {toAmPm(selectedTime)} {getTimezoneAbbr()}
         </div>
+        <p className="text-sm text-gray-500 mb-6">
+          ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+        </p>
         <p className="text-gray-600 mb-8">
           We've sent a confirmation email to <strong>{formData.email}</strong> with calendar invite and meeting details.
         </p>
@@ -159,10 +227,15 @@ export default function CustomBooking() {
               <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-900">Select a Date</h3>
-                <p className="text-sm text-gray-600">Choose your preferred day</p>
+                <p className="text-sm text-gray-600">
+                  {isLoadingCalendar ? 'Checking availability...' : 'Choose your preferred day'}
+                </p>
               </div>
+              {isLoadingCalendar && (
+                <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+              )}
             </div>
 
             <style jsx global>{`
@@ -170,7 +243,7 @@ export default function CustomBooking() {
                 --rdp-cell-size: 48px;
                 --rdp-accent-color: #0ea5e9;
                 --rdp-background-color: #e0f2fe;
-                margin: 0;
+                margin: 0 auto;
               }
               .rdp-months {
                 justify-content: center;
@@ -189,15 +262,17 @@ export default function CustomBooking() {
               }
             `}</style>
 
-            <DayPicker
-              mode="single"
-              selected={selected}
-              onSelect={handleDateSelect}
-              disabled={disabledDays}
-              modifiersClassNames={{
-                selected: 'bg-brand-500',
-              }}
-            />
+            <div className="flex justify-center">
+              <DayPicker
+                mode="single"
+                selected={selected}
+                onSelect={handleDateSelect}
+                disabled={disabledDays}
+                modifiersClassNames={{
+                  selected: 'bg-brand-500',
+                }}
+              />
+            </div>
           </motion.div>
 
           {/* Step 2: Time Selection */}
@@ -213,10 +288,13 @@ export default function CustomBooking() {
                   <div className="w-10 h-10 bg-gradient-to-br from-accent-500 to-accent-600 rounded-lg flex items-center justify-center">
                     <Clock className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900">Select a Time</h3>
                     <p className="text-sm text-gray-600">
                       {format(selected, 'EEEE, MMMM d')}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Your timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
                     </p>
                   </div>
                 </div>
@@ -232,7 +310,7 @@ export default function CustomBooking() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {time}
+                      {toAmPm(time)}
                     </button>
                   ))}
                 </div>

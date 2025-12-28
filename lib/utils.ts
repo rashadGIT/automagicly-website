@@ -93,3 +93,32 @@ export async function sendToN8N(webhookUrl: string | undefined, data: any): Prom
     return false;
   }
 }
+
+// Fetch busy dates from calendar
+export async function fetchBusyDates(): Promise<Date[]> {
+  console.log("Fetching busy dates from calendar");
+  try {
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 60 days ahead
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    console.log("startDate:", startDate, "endDate:", endDate, "timezone:", timezone);
+
+    const response = await fetch(
+      `/api/calendar/availability?start=${startDate}&end=${endDate}&timezone=${timezone}`
+    );
+
+    if (!response.ok) {
+      console.error('Failed to fetch busy dates');
+      return [];
+    }
+
+    const data = await response.json();
+
+    // Convert date strings to Date objects
+    return (data.busyDates || []).map((dateStr: string) => new Date(dateStr + 'T00:00:00'));
+  } catch (error) {
+    console.error('Error fetching busy dates:', error);
+    return [];
+  }
+}
