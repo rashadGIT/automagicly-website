@@ -16,6 +16,7 @@ export default function Referrals() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submittedReferrals, setSubmittedReferrals] = useState<StoredReferral[]>([]);
+  const [showSubmittedReferrals, setShowSubmittedReferrals] = useState(false);
 
   const [formData, setFormData] = useState<ReferralFormData>({
     yourName: '',
@@ -225,27 +226,70 @@ export default function Referrals() {
             </div>
           )}
 
-          {/* Submitted Referrals */}
+          {/* Submitted Referrals - Gamified Collapsible */}
           {submittedReferrals.length > 0 && !submitSuccess && (
             <div className="mt-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Your Submitted Referrals
-              </h3>
-              <div className="space-y-3">
-                {submittedReferrals.map((referral) => (
-                  <div key={referral.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <div className="font-semibold text-gray-900">
-                      {referral.referralName}
-                      {referral.referralCompany && ` - ${referral.referralCompany}`}
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-200">
+                <button
+                  onClick={() => setShowSubmittedReferrals(!showSubmittedReferrals)}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">
+                      {submittedReferrals.length >= 10 ? '💎' :
+                       submittedReferrals.length >= 5 ? '🥇' :
+                       submittedReferrals.length >= 3 ? '🥈' : '🥉'}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {referral.referralContact}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Submitted {new Date(referral.timestamp).toLocaleDateString()}
+                    <div className="text-left">
+                      <div className="font-bold text-gray-900">
+                        {submittedReferrals.length} Referral{submittedReferrals.length !== 1 ? 's' : ''} Submitted
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {submittedReferrals.length < 3 ? `${3 - submittedReferrals.length} more to Silver tier` :
+                         submittedReferrals.length < 5 ? `${5 - submittedReferrals.length} more to Gold tier` :
+                         submittedReferrals.length < 10 ? `${10 - submittedReferrals.length} more to Diamond tier` :
+                         'Diamond tier achieved! 🎉'}
+                      </div>
                     </div>
                   </div>
-                ))}
+                  <svg
+                    className={`w-5 h-5 transition-transform ${showSubmittedReferrals ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Progress Bar */}
+                <div className="mt-3">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{width: `${Math.min((submittedReferrals.length / 10) * 100, 100)}%`}}
+                    />
+                  </div>
+                </div>
+
+                {/* Expandable Content */}
+                {showSubmittedReferrals && (
+                  <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+                    {submittedReferrals.map((referral) => (
+                      <div key={referral.id} className="bg-white rounded p-3 text-sm">
+                        <div className="font-semibold text-gray-900">
+                          {referral.referralName}
+                          {referral.referralCompany && ` - ${referral.referralCompany}`}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                          <span>{referral.referralContact}</span>
+                          <span>•</span>
+                          <span>{new Date(referral.timestamp).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

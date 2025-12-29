@@ -1,0 +1,85 @@
+{
+  "name": "AutoMagicly Review Approval Email",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "reviews",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Review Submitted",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "auto-generated"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "rashad.barnett@gmail.com",
+        "subject": "={{ '⭐'.repeat($json.body.rating) }} New Review from {{ $json.body.name || 'Anonymous' }}",
+        "emailFormat": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f3f4f6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\">\n    <div style=\"background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n      \n      <!-- Header -->\n      <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center;\">\n        <h1 style=\"margin: 0; font-size: 28px; font-weight: 700;\">✨ New Review Submitted!</h1>\n        <p style=\"margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;\">Someone just reviewed your service</p>\n      </div>\n\n      <!-- Content -->\n      <div style=\"padding: 30px;\">\n        \n        <!-- Rating -->\n        <div style=\"text-align: center; margin-bottom: 25px;\">\n          <div style=\"color: #fbbf24; font-size: 32px; line-height: 1;\">\n            {{ '★'.repeat($json.body.rating) }}{{ '☆'.repeat(5 - $json.body.rating) }}\n          </div>\n          <p style=\"margin: 8px 0 0 0; color: #6b7280; font-size: 14px;\">{{ $json.body.rating }} out of 5 stars</p>\n        </div>\n\n        <!-- Reviewer Info -->\n        <div style=\"background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;\">\n          <table style=\"width: 100%; border-collapse: collapse;\">\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px; width: 80px;\"><strong>From:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $json.body.name || 'Anonymous' }}</td>\n            </tr>\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px;\"><strong>Email:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $json.body.email || 'Not provided' }}</td>\n            </tr>\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px;\"><strong>Company:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $json.body.company || 'Not provided' }}</td>\n            </tr>\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px;\"><strong>Service:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $json.body.serviceType }}</td>\n            </tr>\n          </table>\n        </div>\n\n        <!-- Review Text -->\n        <div style=\"background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 30px;\">\n          <p style=\"margin: 0; font-size: 16px; line-height: 1.6; color: #374151; font-style: italic;\">\n            \"{{ $json.body.reviewText }}\"\n          </p>\n        </div>\n\n        <!-- Action Buttons -->\n        <div style=\"text-align: center; margin: 30px 0;\">\n          <table style=\"width: 100%; border-collapse: collapse;\">\n            <tr>\n              <td style=\"padding: 0 5px; text-align: center;\">\n                <a href=\"{{ $json.body.emailData.approveUrl }}\" style=\"display: inline-block; background: #10b981; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);\">\n                  ✓ Approve Review\n                </a>\n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 10px 5px 0 5px; text-align: center;\">\n                <a href=\"{{ $json.body.emailData.rejectUrl }}\" style=\"display: inline-block; background: #ef4444; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);\">\n                  ✗ Reject Review\n                </a>\n              </td>\n            </tr>\n          </table>\n        </div>\n\n        <!-- Admin Dashboard Link -->\n        <div style=\"text-align: center; margin: 20px 0; padding-top: 20px; border-top: 1px solid #e5e7eb;\">\n          <a href=\"{{ $json.body.emailData.adminUrl }}\" style=\"display: inline-block; background: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;\">\n            📊 View All Reviews in Dashboard\n          </a>\n        </div>\n\n        <!-- Footer -->\n        <div style=\"text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;\">\n          <p style=\"margin: 0 0 8px 0;\">⏱️ This approval link expires in 7 days for security.</p>\n          <p style=\"margin: 0; opacity: 0.8;\">AutoMagicly Review System • Powered by N8N</p>\n        </div>\n      </div>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "gmail-1",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { \"success\": true, \"message\": \"Review received and email notification sent\", \"reviewId\": $json.body.id } }}"
+      },
+      "id": "respond-1",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Review Submitted": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Notification": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "automagicly-reviews",
+  "meta": {
+    "instanceId": "your-instance-id"
+  },
+  "tags": []
+}

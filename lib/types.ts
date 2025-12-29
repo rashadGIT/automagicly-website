@@ -11,10 +11,16 @@ export interface AuditFormData {
 
 export interface ReviewFormData {
   name?: string;
+  email?: string;
   company?: string;
   rating: number;
   reviewText: string;
   serviceType: string;
+  featured?: boolean;
+  status?: 'pending' | 'approved' | 'rejected';
+  approvalToken?: string;
+  submittedAt?: string;
+  approvedAt?: string;
 }
 
 export interface ReferralFormData {

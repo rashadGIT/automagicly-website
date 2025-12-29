@@ -20,7 +20,7 @@ const TIME_SLOTS = [
 function toAmPm(time24 : string): string {
   const [h, m] = time24.split(':');
   const date = new Date();
-  date.setHours(h, m);
+  date.setHours(parseInt(h), parseInt(m));
 
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',

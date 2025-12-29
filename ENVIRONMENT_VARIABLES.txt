@@ -1,0 +1,85 @@
+AutoMagicly - Environment Variables for AWS Amplify
+=====================================================
+
+Copy and paste these into AWS Amplify Console → Environment variables
+(After deployment, go to: App Settings → Environment variables → Manage variables)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+N8N WEBHOOK URLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook-test/booking
+
+NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook-test/reviews
+
+NEXT_PUBLIC_N8N_REFERRALS_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook-test/referrals
+
+NEXT_PUBLIC_N8N_WAITLIST_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook-test/waitlist
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GOOGLE CALENDAR API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GOOGLE_SERVICE_ACCOUNT_EMAIL
+automagicly-calendar-reader@automagicly.iam.gserviceaccount.com
+
+GOOGLE_CALENDAR_ID
+43b775854c475d11df8d6850be20324ab6d73d82eb7c43b4fc6277a6ebeeb6d1@group.calendar.google.com
+
+GOOGLE_PRIVATE_KEY
+⚠️  IMPORTANT: Copy the entire private key from your .env file including the
+-----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY----- lines.
+
+(In Amplify, paste it exactly as it appears in your .env file with \n characters intact)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SUPABASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEXT_PUBLIC_SUPABASE_URL
+https://niuadokiehxkethhrhtp.supabase.co
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+⚠️  Copy from your .env file
+
+SUPABASE_SERVICE_ROLE_KEY
+⚠️  Copy from your .env file (This is SECRET - do NOT share publicly)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ADMIN ACCESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEXT_PUBLIC_ADMIN_PASSWORD
+⚠️  Set a strong password for admin access to /admin routes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INSTRUCTIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Copy GOOGLE_PRIVATE_KEY from your .env file
+2. Copy SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY from your .env file
+3. Choose a strong NEXT_PUBLIC_ADMIN_PASSWORD
+4. In AWS Amplify Console, add each variable one by one:
+   - Key: Variable name (e.g., GOOGLE_SERVICE_ACCOUNT_EMAIL)
+   - Value: The actual value
+
+⚠️  SECURITY WARNING:
+   - Never commit .env files to Git (they're already in .gitignore)
+   - Keep SUPABASE_SERVICE_ROLE_KEY secret
+   - Keep GOOGLE_PRIVATE_KEY secret
+   - Use a strong ADMIN_PASSWORD
+
+After adding all variables, Amplify will automatically redeploy your app.

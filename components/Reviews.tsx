@@ -17,9 +17,14 @@ export default function Reviews() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submittedReviews, setSubmittedReviews] = useState<StoredReview[]>([]);
+  const [showSubmittedReviews, setShowSubmittedReviews] = useState(false);
+  const [approvedReviews, setApprovedReviews] = useState<ReviewFormData[]>([]);
+  const [displayReviews, setDisplayReviews] = useState<ReviewFormData[]>([]);
+  const [loadingApproved, setLoadingApproved] = useState(true);
 
   const [formData, setFormData] = useState<ReviewFormData>({
     name: '',
+    email: '',
     company: '',
     rating: 5,
     reviewText: '',
@@ -36,7 +41,35 @@ export default function Reviews() {
         console.error('Error loading reviews:', e);
       }
     }
+
+    // Load approved reviews from API
+    loadApprovedReviews();
   }, []);
+
+  const loadApprovedReviews = async () => {
+    setLoadingApproved(true);
+    try {
+      const response = await fetch('/api/reviews?status=approved');
+      const data = await response.json();
+      const approved = data.reviews || [];
+      setApprovedReviews(approved);
+
+      // Separate featured and non-featured reviews
+      const featured = approved.filter((r: ReviewFormData) => r.featured);
+      const nonFeatured = approved.filter((r: ReviewFormData) => !r.featured);
+
+      // Shuffle non-featured reviews
+      const shuffled = nonFeatured.sort(() => 0.5 - Math.random());
+
+      // Show: Featured first + 5-8 random others
+      const randomOthers = shuffled.slice(0, 8);
+      setDisplayReviews([...featured, ...randomOthers]);
+    } catch (error) {
+      console.error('Error loading approved reviews:', error);
+    } finally {
+      setLoadingApproved(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +94,7 @@ export default function Reviews() {
         setSubmitSuccess(true);
         setFormData({
           name: '',
+          email: '',
           company: '',
           rating: 5,
           reviewText: '',
@@ -108,17 +142,56 @@ export default function Reviews() {
           </p>
         </div>
 
-        {/* Approved Reviews (empty state) */}
+        {/* Approved Reviews */}
         <div className="mb-12">
           <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-            Approved Reviews
+            What Our Clients Say
           </h3>
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4">📝</div>
-            <p className="text-gray-600">
-              Reviews will appear here once approved by our team.
-            </p>
-          </div>
+
+          {loadingApproved ? (
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading reviews...</p>
+            </div>
+          ) : displayReviews.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <div className="text-6xl mb-4">📝</div>
+              <p className="text-gray-600">
+                Reviews will appear here once approved by our team.
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayReviews.map((review, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow relative"
+                >
+                  {review.featured && (
+                    <div className="absolute top-4 right-4">
+                      <span className="text-2xl" title="Featured Review">⭐</span>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    {renderStars(review.rating)}
+                  </div>
+
+                  <p className="text-gray-700 mb-4 italic">"{review.reviewText}"</p>
+
+                  <div className="border-t pt-4">
+                    {review.name && (
+                      <p className="font-semibold text-gray-900">{review.name}</p>
+                    )}
+                    {review.company && (
+                      <p className="text-sm text-gray-600">{review.company}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">{review.serviceType}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Submit Review Button */}
@@ -171,6 +244,19 @@ export default function Reviews() {
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Your name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email (optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="your.email@example.com"
                     />
                   </div>
 
@@ -256,26 +342,77 @@ export default function Reviews() {
           </div>
         )}
 
-        {/* Your Submitted Reviews */}
+        {/* Your Submitted Reviews - Gamified Collapsible */}
         {submittedReviews.length > 0 && (
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-              Your Submitted Reviews (Pending Moderation)
-            </h3>
-            <div className="grid gap-6">
-              {submittedReviews.map((review) => (
-                <div key={review.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      {review.name && <div className="font-semibold text-gray-900">{review.name}</div>}
-                      {review.company && <div className="text-sm text-gray-600">{review.company}</div>}
-                    </div>
-                    {renderStars(review.rating)}
+          <div className="max-w-4xl mx-auto mt-8">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-200">
+              <button
+                onClick={() => setShowSubmittedReviews(!showSubmittedReviews)}
+                className="w-full flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">
+                    {submittedReviews.length >= 10 ? '💎' :
+                     submittedReviews.length >= 5 ? '🥇' :
+                     submittedReviews.length >= 3 ? '🥈' : '🥉'}
                   </div>
-                  <p className="text-gray-700 mb-2">{review.reviewText}</p>
-                  <div className="text-xs text-gray-500">Service: {review.serviceType}</div>
+                  <div className="text-left">
+                    <div className="font-bold text-gray-900">
+                      {submittedReviews.length} Review{submittedReviews.length !== 1 ? 's' : ''} Submitted
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {submittedReviews.length < 3 ? `${3 - submittedReviews.length} more to Silver tier` :
+                       submittedReviews.length < 5 ? `${5 - submittedReviews.length} more to Gold tier` :
+                       submittedReviews.length < 10 ? `${10 - submittedReviews.length} more to Diamond tier` :
+                       'Diamond tier achieved! 🎉'}
+                    </div>
+                  </div>
                 </div>
-              ))}
+                <svg
+                  className={`w-5 h-5 transition-transform ${showSubmittedReviews ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                    style={{width: `${Math.min((submittedReviews.length / 10) * 100, 100)}%`}}
+                  />
+                </div>
+              </div>
+
+              {/* Expandable Content */}
+              {showSubmittedReviews && (
+                <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+                  {submittedReviews.map((review) => (
+                    <div key={review.id} className="bg-white rounded p-3 text-sm">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 mb-1">
+                            {review.reviewText.length > 80
+                              ? `${review.reviewText.substring(0, 80)}...`
+                              : review.reviewText}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span className="flex">{renderStars(review.rating)}</span>
+                            <span>•</span>
+                            <span>{review.serviceType}</span>
+                            <span>•</span>
+                            <span>{new Date(review.timestamp).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

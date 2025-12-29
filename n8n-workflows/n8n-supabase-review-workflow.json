@@ -1,0 +1,166 @@
+{
+  "name": "AutoMagicly Reviews - Supabase",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "reviews",
+        "options": {}
+      },
+      "id": "webhook-review",
+      "name": "Review Submitted",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/reviews",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.body.name }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.body.email }}"
+            },
+            {
+              "name": "company",
+              "value": "={{ $json.body.company }}"
+            },
+            {
+              "name": "rating",
+              "value": "={{ $json.body.rating }}"
+            },
+            {
+              "name": "review_text",
+              "value": "={{ $json.body.reviewText }}"
+            },
+            {
+              "name": "service_type",
+              "value": "={{ $json.body.serviceType }}"
+            },
+            {
+              "name": "status",
+              "value": "pending"
+            },
+            {
+              "name": "approval_token",
+              "value": "={{ $runIndex }}_{{ Date.now() }}_{{ Math.floor(Math.random() * 1000000) }}"
+            },
+            {
+              "name": "token_expires_at",
+              "value": "={{ new Date(Date.now() + 604800000).toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-insert",
+      "name": "Insert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "rashad.barnett@gmail.com",
+        "subject": "={{ '⭐'.repeat($('Insert to Supabase').item.json[0].rating) }} New Review from {{ $('Insert to Supabase').item.json[0].name || 'Anonymous' }}",
+        "emailFormat": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f3f4f6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\">\n    <div style=\"background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n      \n      <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center;\">\n        <h1 style=\"margin: 0; font-size: 28px; font-weight: 700;\">✨ New Review Submitted!</h1>\n        <p style=\"margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;\">Review ID: {{ $('Insert to Supabase').item.json[0].id }}</p>\n      </div>\n\n      <div style=\"padding: 30px;\">\n        \n        <div style=\"text-align: center; margin-bottom: 25px;\">\n          <div style=\"color: #fbbf24; font-size: 32px; line-height: 1;\">\n            {{ '★'.repeat($('Insert to Supabase').item.json[0].rating) }}{{ '☆'.repeat(5 - $('Insert to Supabase').item.json[0].rating) }}\n          </div>\n          <p style=\"margin: 8px 0 0 0; color: #6b7280; font-size: 14px;\">{{ $('Insert to Supabase').item.json[0].rating }} out of 5 stars</p>\n        </div>\n\n        <div style=\"background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;\">\n          <table style=\"width: 100%; border-collapse: collapse;\">\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px; width: 80px;\"><strong>From:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $('Insert to Supabase').item.json[0].name || 'Anonymous' }}</td>\n            </tr>\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px;\"><strong>Email:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $('Insert to Supabase').item.json[0].email || 'Not provided' }}</td>\n            </tr>\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px;\"><strong>Company:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $('Insert to Supabase').item.json[0].company || 'Not provided' }}</td>\n            </tr>\n            <tr>\n              <td style=\"padding: 6px 0; color: #6b7280; font-size: 14px;\"><strong>Service:</strong></td>\n              <td style=\"padding: 6px 0; color: #111827; font-size: 14px;\">{{ $('Insert to Supabase').item.json[0].service_type }}</td>\n            </tr>\n          </table>\n        </div>\n\n        <div style=\"background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 30px;\">\n          <p style=\"margin: 0; font-size: 16px; line-height: 1.6; color: #374151; font-style: italic;\">\n            \"{{ $('Insert to Supabase').item.json[0].review_text }}\"\n          </p>\n        </div>\n\n        <div style=\"text-align: center; margin: 30px 0;\">\n          <table style=\"width: 100%; border-collapse: collapse;\">\n            <tr>\n              <td style=\"padding: 0 5px; text-align: center;\">\n                <a href=\"{{ $env.WEBSITE_URL }}/api/reviews/approve?token={{ $('Insert to Supabase').item.json[0].approval_token }}\" style=\"display: inline-block; background: #10b981; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);\">\n                  ✓ Approve Review\n                </a>\n              </td>\n            </tr>\n            <tr>\n              <td style=\"padding: 10px 5px 0 5px; text-align: center;\">\n                <a href=\"{{ $env.WEBSITE_URL }}/api/reviews/reject?token={{ $('Insert to Supabase').item.json[0].approval_token }}\" style=\"display: inline-block; background: #ef4444; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);\">\n                  ✗ Reject Review\n                </a>\n              </td>\n            </tr>\n          </table>\n        </div>\n\n        <div style=\"text-align: center; margin: 20px 0; padding-top: 20px; border-top: 1px solid #e5e7eb;\">\n          <a href=\"{{ $env.WEBSITE_URL }}/admin/reviews\" style=\"display: inline-block; background: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;\">\n            📊 View All Reviews in Dashboard\n          </a>\n        </div>\n\n        <div style=\"text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;\">\n          <p style=\"margin: 0 0 8px 0;\">⏱️ This approval link expires in 7 days for security.</p>\n          <p style=\"margin: 0; opacity: 0.8;\">AutoMagicly Review System • Powered by Supabase + N8N</p>\n        </div>\n      </div>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { \"success\": true, \"message\": \"Review submitted successfully\", \"reviewId\": $('Insert to Supabase').item.json[0].id } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Review Submitted": {
+      "main": [
+        [
+          {
+            "node": "Insert to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Notification": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "automagicly-reviews-supabase"
+}
