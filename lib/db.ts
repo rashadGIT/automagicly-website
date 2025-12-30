@@ -9,10 +9,10 @@ let docClient: DynamoDBDocumentClient | null = null;
 function getDocClient() {
   if (!docClient) {
     const client = new DynamoDBClient({
-      region: process.env.REGION || 'us-east-1',
+      region: (process.env.REGION || 'us-east-1').trim(),
       credentials: {
-        accessKeyId: process.env.DB_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+        accessKeyId: (process.env.DB_ACCESS_KEY_ID || '').trim(),
+        secretAccessKey: (process.env.DB_SECRET_ACCESS_KEY || '').trim(),
       }
     });
     docClient = DynamoDBDocumentClient.from(client);
