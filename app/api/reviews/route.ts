@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getReviews, updateReview, deleteReview } from '@/lib/db';
+import { DynamoDBClient, ScanCommand, QueryCommand, UpdateItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
+import { unmarshall, marshall } from '@aws-sdk/util-dynamodb';
 
 // GET /api/reviews - Fetch reviews
 export async function GET(request: NextRequest) {
@@ -7,12 +8,56 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
 
-    const reviews = await getReviews(status || undefined);
-
-    return NextResponse.json({
-      reviews,
-      count: reviews.length
+    const client = new DynamoDBClient({
+      region: process.env.REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.DB_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+      }
     });
+
+    if (status && status !== 'all') {
+      // Query by status using GSI
+      const command = new QueryCommand({
+        TableName: 'automagicly-reviews',
+        IndexName: 'status-created_at-index',
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status'
+        },
+        ExpressionAttributeValues: {
+          ':status': { S: status }
+        },
+        ScanIndexForward: false
+      });
+
+      const response = await client.send(command);
+      const reviews = response.Items?.map(item => unmarshall(item)) || [];
+
+      // Filter for approved reviews with 3+ stars
+      const filteredReviews = status === 'approved'
+        ? reviews.filter((r: any) => r.rating >= 3)
+        : reviews;
+
+      return NextResponse.json({
+        reviews: filteredReviews,
+        count: filteredReviews.length
+      });
+    } else {
+      // Scan all reviews
+      const command = new ScanCommand({
+        TableName: 'automagicly-reviews'
+      });
+
+      const response = await client.send(command);
+      const reviews = response.Items?.map(item => unmarshall(item)) || [];
+      reviews.sort((a: any, b: any) => b.created_at - a.created_at);
+
+      return NextResponse.json({
+        reviews,
+        count: reviews.length
+      });
+    }
 
   } catch (error: any) {
     console.error('Error fetching reviews:', error);
@@ -43,11 +88,51 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const updates: { status?: 'pending' | 'approved' | 'rejected'; featured?: boolean } = {};
-    if (status) updates.status = status;
-    if (featured !== undefined) updates.featured = featured;
+    const client = new DynamoDBClient({
+      region: process.env.REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.DB_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+      }
+    });
 
-    const review = await updateReview(id, updates);
+    const updateExpressions: string[] = ['#updated_at = :updated_at'];
+    const expressionAttributeNames: Record<string, string> = {
+      '#updated_at': 'updated_at'
+    };
+    const expressionAttributeValues: any = {
+      ':updated_at': Date.now()
+    };
+
+    if (status !== undefined) {
+      updateExpressions.push('#status = :status');
+      expressionAttributeNames['#status'] = 'status';
+      expressionAttributeValues[':status'] = status;
+
+      if (status === 'approved') {
+        updateExpressions.push('#approved_at = :approved_at');
+        expressionAttributeNames['#approved_at'] = 'approved_at';
+        expressionAttributeValues[':approved_at'] = Date.now();
+      }
+    }
+
+    if (featured !== undefined) {
+      updateExpressions.push('#featured = :featured');
+      expressionAttributeNames['#featured'] = 'featured';
+      expressionAttributeValues[':featured'] = featured;
+    }
+
+    const command = new UpdateItemCommand({
+      TableName: 'automagicly-reviews',
+      Key: marshall({ id }),
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: marshall(expressionAttributeValues),
+      ReturnValues: 'ALL_NEW'
+    });
+
+    const response = await client.send(command);
+    const review = response.Attributes ? unmarshall(response.Attributes) : null;
 
     if (!review) {
       return NextResponse.json({
@@ -84,14 +169,20 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const deleted = await deleteReview(id);
+    const client = new DynamoDBClient({
+      region: process.env.REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.DB_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+      }
+    });
 
-    if (!deleted) {
-      return NextResponse.json({
-        success: false,
-        error: 'Review not found'
-      }, { status: 404 });
-    }
+    const command = new DeleteItemCommand({
+      TableName: 'automagicly-reviews',
+      Key: marshall({ id })
+    });
+
+    await client.send(command);
 
     return NextResponse.json({
       success: true,
