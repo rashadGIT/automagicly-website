@@ -27,11 +27,17 @@ export default function Header() {
     { label: 'Coming Soon', id: 'coming-soon' },
   ];
 
-  const handleNavClick = (e: React.MouseEvent, id: string) => {
+  const handleNavClick = (e: React.MouseEvent | React.TouchEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    scrollToElement(id);
+
+    // Close menu first for immediate feedback
     setIsMobileMenuOpen(false);
+
+    // Small delay to allow menu close animation before scrolling
+    setTimeout(() => {
+      scrollToElement(id);
+    }, 100);
   };
 
   return (
@@ -108,7 +114,8 @@ export default function Header() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={(e) => handleNavClick(e, item.id)}
-                    className="text-left text-gray-700 hover:text-brand-600 font-medium py-2 transition-colors hover:translate-x-2 duration-200"
+                    onTouchEnd={(e) => handleNavClick(e, item.id)}
+                    className="text-left text-gray-700 hover:text-brand-600 font-medium py-3 px-2 transition-colors hover:translate-x-2 duration-200 cursor-pointer active:bg-gray-100 rounded"
                   >
                     {item.label}
                   </motion.button>
@@ -118,7 +125,8 @@ export default function Header() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: navItems.length * 0.05 }}
                   onClick={(e) => handleNavClick(e, 'booking')}
-                  className="btn-primary flex items-center justify-center gap-2 !py-3"
+                  onTouchEnd={(e) => handleNavClick(e, 'booking')}
+                  className="btn-primary flex items-center justify-center gap-2 !py-3 cursor-pointer active:opacity-90"
                 >
                   <Zap className="w-4 h-4" />
                   <span>Get Started</span>
