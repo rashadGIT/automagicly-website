@@ -5,7 +5,7 @@ let pool: Pool | null = null;
 
 export function getPool() {
   if (!pool) {
-    pool = new Pool({
+    const config = {
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT || '5432'),
       database: process.env.DB_NAME,
@@ -15,7 +15,12 @@ export function getPool() {
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
+    };
+    console.log('Creating pool with config:', {
+      ...config,
+      password: config.password ? '***' : undefined
     });
+    pool = new Pool(config);
   }
   return pool;
 }
