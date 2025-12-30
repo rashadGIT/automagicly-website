@@ -8,13 +8,26 @@ let docClient: DynamoDBDocumentClient | null = null;
 
 function getDocClient() {
   if (!docClient) {
-    const client = new DynamoDBClient({
+    console.log('Creating DynamoDB client...');
+    console.log('DB_ACCESS_KEY_ID:', process.env.DB_ACCESS_KEY_ID ? 'SET' : 'NOT SET');
+    console.log('DB_SECRET_ACCESS_KEY:', process.env.DB_SECRET_ACCESS_KEY ? 'SET' : 'NOT SET');
+    console.log('REGION:', process.env.REGION);
+
+    const config: any = {
       region: process.env.REGION || process.env.AWS_REGION || 'us-east-1',
-      credentials: process.env.DB_ACCESS_KEY_ID && process.env.DB_SECRET_ACCESS_KEY ? {
+    };
+
+    if (process.env.DB_ACCESS_KEY_ID && process.env.DB_SECRET_ACCESS_KEY) {
+      config.credentials = {
         accessKeyId: process.env.DB_ACCESS_KEY_ID,
         secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
-      } : undefined,
-    });
+      };
+      console.log('Using custom credentials');
+    } else {
+      console.log('No custom credentials, using default provider chain');
+    }
+
+    const client = new DynamoDBClient(config);
     docClient = DynamoDBDocumentClient.from(client);
   }
   return docClient;
