@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Type definitions for our database
+// Type definitions
 export interface Review {
   id: string;
   name?: string;
@@ -21,48 +21,30 @@ export interface Review {
 
 // GET /api/reviews - Fetch reviews
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const status = searchParams.get('status'); // 'approved', 'pending', 'rejected', or 'all'
-
   try {
-    // Create client directly - same as direct-supabase-test
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get('status');
 
-    console.log('Reviews API - URL:', supabaseUrl);
-    console.log('Reviews API - Key length:', supabaseKey?.length);
-    console.log('Reviews API - URL defined:', !!supabaseUrl);
-    console.log('Reviews API - Key defined:', !!supabaseKey);
+    // EXACT same approach as direct-supabase-test
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({
-        reviews: [],
-        error: `Missing env vars: URL=${!!supabaseUrl}, Key=${!!supabaseKey}`,
-        debug: {
-          urlLength: supabaseUrl?.length || 0,
-          keyLength: supabaseKey?.length || 0
-        }
-      }, { status: 500 });
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
       }
     });
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('reviews')
       .select('*')
-      .order('created_at', { ascending: false});
+      .order('created_at', { ascending: false });
 
-    // Filter by status if provided
     if (status && status !== 'all') {
       query = query.eq('status', status);
     }
 
-    // For public requests, only show approved reviews with 3+ stars
     if (!status || status === 'approved') {
       query = query.gte('rating', 3);
     }
@@ -91,13 +73,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PATCH /api/reviews - Update review status/featured
+// PATCH /api/reviews - Update review
 export async function PATCH(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -114,7 +96,6 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Build update object
     const updates: Partial<Review> = {
       updated_at: new Date().toISOString()
     };
@@ -136,8 +117,7 @@ export async function PATCH(request: NextRequest) {
       updates.featured = featured;
     }
 
-    // Update in Supabase
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('reviews')
       .update(updates)
       .eq('id', id)
@@ -167,13 +147,13 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE /api/reviews - Delete a review
+// DELETE /api/reviews - Delete review
 export async function DELETE(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -190,7 +170,7 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('reviews')
       .delete()
       .eq('id', id);
