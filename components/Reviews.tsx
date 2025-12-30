@@ -180,7 +180,7 @@ export default function Reviews() {
                     {renderStars(review.rating)}
                   </div>
 
-                  <p className="text-gray-700 mb-4 italic">"{review.reviewText}"</p>
+                  <p className="text-gray-700 mb-4 italic">"{review.review_text || review.reviewText}"</p>
 
                   <div className="border-t pt-4">
                     {review.name && (
@@ -189,7 +189,7 @@ export default function Reviews() {
                     {review.company && (
                       <p className="text-sm text-gray-600">{review.company}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">{review.serviceType}</p>
+                    <p className="text-xs text-gray-500 mt-1">{review.service_type || review.serviceType}</p>
                   </div>
                 </div>
               ))}
