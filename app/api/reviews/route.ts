@@ -1,23 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Type definitions
-export interface Review {
-  id: string;
-  name?: string;
-  email?: string;
-  company?: string;
-  rating: number;
-  review_text: string;
-  service_type: string;
-  status: 'pending' | 'approved' | 'rejected';
-  featured?: boolean;
-  approval_token?: string;
-  token_expires_at?: string;
-  created_at: string;
-  approved_at?: string;
-  updated_at: string;
-}
+import { getPool, type Review } from '@/lib/db';
 
 // GET /api/reviews - Fetch reviews
 export async function GET(request: NextRequest) {
@@ -25,43 +7,35 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
 
-    // EXACT same approach as direct-supabase-test
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const pool = getPool();
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    let query = 'SELECT * FROM reviews';
+    const params: any[] = [];
+    const conditions: string[] = [];
 
-    let query = supabase
-      .from('reviews')
-      .select('*')
-      .order('created_at', { ascending: false });
-
+    // Filter by status if provided
     if (status && status !== 'all') {
-      query = query.eq('status', status);
+      conditions.push(`status = $${params.length + 1}`);
+      params.push(status);
     }
 
+    // For public requests, only show approved reviews with 3+ stars
     if (!status || status === 'approved') {
-      query = query.gte('rating', 3);
+      conditions.push(`rating >= $${params.length + 1}`);
+      params.push(3);
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json({
-        reviews: [],
-        error: 'Failed to fetch reviews'
-      }, { status: 500 });
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
     }
+
+    query += ' ORDER BY created_at DESC';
+
+    const result = await pool.query(query, params);
 
     return NextResponse.json({
-      reviews: data || [],
-      count: data?.length || 0
+      reviews: result.rows,
+      count: result.rows.length
     });
 
   } catch (error: any) {
@@ -76,16 +50,7 @@ export async function GET(request: NextRequest) {
 // PATCH /api/reviews - Update review
 export async function PATCH(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
+    const pool = getPool();
     const body = await request.json();
     const { id, status, featured } = body;
 
@@ -96,9 +61,8 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const updates: Partial<Review> = {
-      updated_at: new Date().toISOString()
-    };
+    const updates: string[] = ['updated_at = CURRENT_TIMESTAMP'];
+    const params: any[] = [];
 
     if (status) {
       if (!['approved', 'rejected', 'pending'].includes(status)) {
@@ -107,35 +71,40 @@ export async function PATCH(request: NextRequest) {
           error: 'Invalid status'
         }, { status: 400 });
       }
-      updates.status = status;
-      if (status === 'approved' && !updates.approved_at) {
-        updates.approved_at = new Date().toISOString();
+      params.push(status);
+      updates.push(`status = $${params.length}`);
+
+      if (status === 'approved') {
+        updates.push('approved_at = CURRENT_TIMESTAMP');
       }
     }
 
     if (featured !== undefined) {
-      updates.featured = featured;
+      params.push(featured);
+      updates.push(`featured = $${params.length}`);
     }
 
-    const { data, error } = await supabase
-      .from('reviews')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    params.push(id);
+    const query = `
+      UPDATE reviews
+      SET ${updates.join(', ')}
+      WHERE id = $${params.length}
+      RETURNING *
+    `;
 
-    if (error) {
-      console.error('Supabase error:', error);
+    const result = await pool.query(query, params);
+
+    if (result.rows.length === 0) {
       return NextResponse.json({
         success: false,
-        error: error.message
-      }, { status: 500 });
+        error: 'Review not found'
+      }, { status: 404 });
     }
 
     return NextResponse.json({
       success: true,
       message: status ? `Review ${status}` : 'Review updated',
-      review: data
+      review: result.rows[0]
     });
 
   } catch (error: any) {
@@ -150,16 +119,7 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/reviews - Delete review
 export async function DELETE(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
+    const pool = getPool();
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -170,17 +130,16 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('reviews')
-      .delete()
-      .eq('id', id);
+    const result = await pool.query(
+      'DELETE FROM reviews WHERE id = $1 RETURNING id',
+      [id]
+    );
 
-    if (error) {
-      console.error('Supabase error:', error);
+    if (result.rows.length === 0) {
       return NextResponse.json({
         success: false,
-        error: error.message
-      }, { status: 500 });
+        error: 'Review not found'
+      }, { status: 404 });
     }
 
     return NextResponse.json({
