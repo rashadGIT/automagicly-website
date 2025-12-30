@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-// GET /api/reviews - Fetch reviews
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
     });
 
     const command = new ScanCommand({
-      TableName: 'automagicly-reviews'
+      TableName: 'automagicly-reviews',
     });
 
     const response = await client.send(command);
@@ -40,7 +39,6 @@ export async function GET(request: NextRequest) {
       reviews,
       count: reviews.length
     });
-
   } catch (error: any) {
     console.error('Error fetching reviews:', error);
     return NextResponse.json({
