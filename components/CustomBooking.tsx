@@ -80,13 +80,12 @@ export default function CustomBooking() {
   }, []);
 
   console.log("Busy dates:", busyDates);
-  // Disable past dates, weekdays, and busy dates from calendar
+  // Disable past dates and busy dates from calendar
   const disabledDays = [
     { before: addDays(new Date(), 1) },
-    { dayOfWeek: [1, 2, 3, 4, 5] }, // Monday through Friday (weekdays)
     ...busyDates // Dates when you have calendar events
   ];
-  
+
   console.log("Disabled days:", disabledDays);
 
   const handleDateSelect = (date: Date | undefined) => {
