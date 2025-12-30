@@ -109,6 +109,7 @@ export async function fetchBusyDates(): Promise<Date[]> {
     );
 
     if (!response.ok) {
+      console.log('Failed response when fetching busy dates:', response);
       console.error('Failed to fetch busy dates');
       return [];
     }
