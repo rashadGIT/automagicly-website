@@ -110,7 +110,9 @@ export async function fetchBusyDates(): Promise<Date[]> {
     const response = await fetch(apiUrl);
 
     console.log("🔍 CLIENT: API response status:", response.status, response.statusText);
-
+    
+    console.log("dfuidewfiewdfe",response)
+    
     if (!response.ok) {
       console.error('❌ CLIENT: Failed response when fetching busy dates:', response.status, response.statusText);
       return [];
