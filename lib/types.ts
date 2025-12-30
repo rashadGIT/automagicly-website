@@ -21,6 +21,9 @@ export interface ReviewFormData {
   approvalToken?: string;
   submittedAt?: string;
   approvedAt?: string;
+  // DynamoDB snake_case fields (for compatibility)
+  review_text?: string;
+  service_type?: string;
 }
 
 export interface ReferralFormData {
