@@ -26,8 +26,24 @@ export async function GET(request: NextRequest) {
 
   try {
     // Create client directly - same as direct-supabase-test
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    console.log('Reviews API - URL:', supabaseUrl);
+    console.log('Reviews API - Key length:', supabaseKey?.length);
+    console.log('Reviews API - URL defined:', !!supabaseUrl);
+    console.log('Reviews API - Key defined:', !!supabaseKey);
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({
+        reviews: [],
+        error: `Missing env vars: URL=${!!supabaseUrl}, Key=${!!supabaseKey}`,
+        debug: {
+          urlLength: supabaseUrl?.length || 0,
+          keyLength: supabaseKey?.length || 0
+        }
+      }, { status: 500 });
+    }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
       auth: {
