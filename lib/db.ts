@@ -1,17 +1,24 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-const client = new DynamoDBClient({
-  region: process.env.REGION || process.env.AWS_REGION || 'us-east-1',
-  credentials: process.env.DB_ACCESS_KEY_ID && process.env.DB_SECRET_ACCESS_KEY ? {
-    accessKeyId: process.env.DB_ACCESS_KEY_ID,
-    secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
-  } : undefined,
-});
-const docClient = DynamoDBDocumentClient.from(client);
-
 const TABLE_NAME = 'automagicly-reviews';
 const GSI_NAME = 'status-created_at-index';
+
+let docClient: DynamoDBDocumentClient | null = null;
+
+function getDocClient() {
+  if (!docClient) {
+    const client = new DynamoDBClient({
+      region: process.env.REGION || process.env.AWS_REGION || 'us-east-1',
+      credentials: process.env.DB_ACCESS_KEY_ID && process.env.DB_SECRET_ACCESS_KEY ? {
+        accessKeyId: process.env.DB_ACCESS_KEY_ID,
+        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
+      } : undefined,
+    });
+    docClient = DynamoDBDocumentClient.from(client);
+  }
+  return docClient;
+}
 
 // Type definitions for our database
 export interface Review {
@@ -34,6 +41,8 @@ export interface Review {
 // Get reviews with optional filtering
 export async function getReviews(status?: string): Promise<Review[]> {
   try {
+    const client = getDocClient();
+
     if (status && status !== 'all') {
       // Use GSI to query by status
       const command = new QueryCommand({
@@ -49,7 +58,7 @@ export async function getReviews(status?: string): Promise<Review[]> {
         ScanIndexForward: false // Sort by created_at DESC
       });
 
-      const response = await docClient.send(command);
+      const response = await client.send(command);
       const reviews = response.Items as Review[];
 
       // Filter for approved reviews with 3+ stars
@@ -64,7 +73,7 @@ export async function getReviews(status?: string): Promise<Review[]> {
         TableName: TABLE_NAME
       });
 
-      const response = await docClient.send(command);
+      const response = await client.send(command);
       const reviews = (response.Items as Review[]) || [];
 
       // Sort by created_at DESC
@@ -81,6 +90,7 @@ export async function getReviews(status?: string): Promise<Review[]> {
 // Create a new review
 export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>): Promise<Review> {
   try {
+    const client = getDocClient();
     const now = Date.now();
     const id = crypto.randomUUID();
 
@@ -96,7 +106,7 @@ export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'u
       Item: newReview
     });
 
-    await docClient.send(command);
+    await client.send(command);
     return newReview;
   } catch (error) {
     console.error('Error creating review:', error);
@@ -110,6 +120,7 @@ export async function updateReview(
   updates: { status?: 'pending' | 'approved' | 'rejected'; featured?: boolean }
 ): Promise<Review | null> {
   try {
+    const client = getDocClient();
     const updateExpressions: string[] = ['#updated_at = :updated_at'];
     const expressionAttributeNames: Record<string, string> = {
       '#updated_at': 'updated_at'
@@ -145,7 +156,7 @@ export async function updateReview(
       ReturnValues: 'ALL_NEW'
     });
 
-    const response = await docClient.send(command);
+    const response = await client.send(command);
     return response.Attributes as Review;
   } catch (error) {
     console.error('Error updating review:', error);
@@ -156,12 +167,13 @@ export async function updateReview(
 // Delete a review
 export async function deleteReview(id: string): Promise<boolean> {
   try {
+    const client = getDocClient();
     const command = new DeleteCommand({
       TableName: TABLE_NAME,
       Key: { id }
     });
 
-    await docClient.send(command);
+    await client.send(command);
     return true;
   } catch (error) {
     console.error('Error deleting review:', error);
