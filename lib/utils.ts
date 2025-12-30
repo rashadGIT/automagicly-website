@@ -96,30 +96,43 @@ export async function sendToN8N(webhookUrl: string | undefined, data: any): Prom
 
 // Fetch busy dates from calendar
 export async function fetchBusyDates(): Promise<Date[]> {
-  console.log("Fetching busy dates from calendar");
+  console.log("🔍 CLIENT: Fetching busy dates from calendar");
   try {
     const startDate = new Date().toISOString().split('T')[0];
     const endDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 60 days ahead
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    console.log("startDate:", startDate, "endDate:", endDate, "timezone:", timezone);
+    console.log("🔍 CLIENT: Request params -", { startDate, endDate, timezone });
 
-    const response = await fetch(
-      `/api/calendar/availability?start=${startDate}&end=${endDate}&timezone=${timezone}`
-    );
+    const apiUrl = `/api/calendar/availability?start=${startDate}&end=${endDate}&timezone=${timezone}`;
+    console.log("🔍 CLIENT: Calling API:", apiUrl);
+
+    const response = await fetch(apiUrl);
+
+    console.log("🔍 CLIENT: API response status:", response.status, response.statusText);
 
     if (!response.ok) {
-      console.log('Failed response when fetching busy dates:', response);
-      console.error('Failed to fetch busy dates');
+      console.error('❌ CLIENT: Failed response when fetching busy dates:', response.status, response.statusText);
       return [];
     }
 
     const data = await response.json();
+    console.log("🔍 CLIENT: API response data:", data);
+
+    if (data.error) {
+      console.error('❌ CLIENT: API returned error:', data.error);
+    }
+
+    if (data.busyDates && data.busyDates.length > 0) {
+      console.log(`✅ CLIENT: Found ${data.busyDates.length} busy dates:`, data.busyDates);
+    } else {
+      console.log("⚠️ CLIENT: No busy dates returned from API");
+    }
 
     // Convert date strings to Date objects
     return (data.busyDates || []).map((dateStr: string) => new Date(dateStr + 'T00:00:00'));
   } catch (error) {
-    console.error('Error fetching busy dates:', error);
+    console.error('❌ CLIENT: Error fetching busy dates:', error);
     return [];
   }
 }
