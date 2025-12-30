@@ -24,6 +24,17 @@ https://rashadbarnett.app.n8n.cloud/webhook-test/waitlist
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+CHAT ASSISTANT (Server-side only, NOT public)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+N8N_CHAT_WEBHOOK_URL
+⚠️  Get this URL from N8N after importing chat-workflow.json
+⚠️  See AUTOMAGICLY_ASSISTANT_SETUP.md for complete setup instructions
+⚠️  This is NOT a NEXT_PUBLIC_ variable (called from API route, not browser)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 GOOGLE CALENDAR API
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
