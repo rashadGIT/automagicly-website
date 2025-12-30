@@ -49,7 +49,7 @@ export default function Reviews() {
   const loadApprovedReviews = async () => {
     setLoadingApproved(true);
     try {
-      const response = await fetch('/api/reviews?status=approved');
+      const response = await fetch('/api/reviews-simple?status=approved');
       const data = await response.json();
       const approved = data.reviews || [];
       setApprovedReviews(approved);

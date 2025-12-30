@@ -38,7 +38,7 @@ export default function AdminReviews() {
   const loadReviews = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/reviews?status=${filter}`);
+      const response = await fetch(`/api/reviews-simple?status=${filter}`);
       const data = await response.json();
       setReviews(data.reviews || []);
     } catch (error) {
