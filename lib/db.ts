@@ -1,29 +1,11 @@
-import { Pool } from 'pg';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-// Create a connection pool
-let pool: Pool | null = null;
+const client = new DynamoDBClient({ region: 'us-east-1' });
+const docClient = DynamoDBDocumentClient.from(client);
 
-export function getPool() {
-  if (!pool) {
-    const config = {
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    };
-    console.log('Creating pool with config:', {
-      ...config,
-      password: config.password ? '***' : undefined
-    });
-    pool = new Pool(config);
-  }
-  return pool;
-}
+const TABLE_NAME = 'automagicly-reviews';
+const GSI_NAME = 'status-created_at-index';
 
 // Type definitions for our database
 export interface Review {
@@ -37,44 +19,146 @@ export interface Review {
   status: 'pending' | 'approved' | 'rejected';
   featured?: boolean;
   approval_token?: string;
-  token_expires_at?: string;
-  created_at: string;
-  approved_at?: string;
-  updated_at: string;
+  token_expires_at?: number;
+  created_at: number;
+  approved_at?: number;
+  updated_at: number;
 }
 
-// Initialize database schema
-export async function initDatabase() {
-  const pool = getPool();
-
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS reviews (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name VARCHAR(255),
-      email VARCHAR(255),
-      company VARCHAR(255),
-      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-      review_text TEXT NOT NULL,
-      service_type VARCHAR(255) NOT NULL,
-      status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-      featured BOOLEAN DEFAULT FALSE,
-      approval_token VARCHAR(255),
-      token_expires_at TIMESTAMP,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      approved_at TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
-    CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_reviews_approval_token ON reviews(approval_token);
-  `;
-
+// Get reviews with optional filtering
+export async function getReviews(status?: string): Promise<Review[]> {
   try {
-    await pool.query(createTableQuery);
-    console.log('✅ Database schema initialized');
+    if (status && status !== 'all') {
+      // Use GSI to query by status
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: GSI_NAME,
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status'
+        },
+        ExpressionAttributeValues: {
+          ':status': status
+        },
+        ScanIndexForward: false // Sort by created_at DESC
+      });
+
+      const response = await docClient.send(command);
+      const reviews = response.Items as Review[];
+
+      // Filter for approved reviews with 3+ stars
+      if (!status || status === 'approved') {
+        return reviews.filter(r => r.rating >= 3);
+      }
+
+      return reviews;
+    } else {
+      // Scan all reviews
+      const command = new ScanCommand({
+        TableName: TABLE_NAME
+      });
+
+      const response = await docClient.send(command);
+      const reviews = (response.Items as Review[]) || [];
+
+      // Sort by created_at DESC
+      reviews.sort((a, b) => b.created_at - a.created_at);
+
+      return reviews;
+    }
   } catch (error) {
-    console.error('❌ Error initializing database:', error);
+    console.error('Error getting reviews:', error);
+    throw error;
+  }
+}
+
+// Create a new review
+export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>): Promise<Review> {
+  try {
+    const now = Date.now();
+    const id = crypto.randomUUID();
+
+    const newReview: Review = {
+      ...review,
+      id,
+      created_at: now,
+      updated_at: now
+    };
+
+    const command = new PutCommand({
+      TableName: TABLE_NAME,
+      Item: newReview
+    });
+
+    await docClient.send(command);
+    return newReview;
+  } catch (error) {
+    console.error('Error creating review:', error);
+    throw error;
+  }
+}
+
+// Update a review
+export async function updateReview(
+  id: string,
+  updates: { status?: 'pending' | 'approved' | 'rejected'; featured?: boolean }
+): Promise<Review | null> {
+  try {
+    const updateExpressions: string[] = ['#updated_at = :updated_at'];
+    const expressionAttributeNames: Record<string, string> = {
+      '#updated_at': 'updated_at'
+    };
+    const expressionAttributeValues: Record<string, any> = {
+      ':updated_at': Date.now()
+    };
+
+    if (updates.status !== undefined) {
+      updateExpressions.push('#status = :status');
+      expressionAttributeNames['#status'] = 'status';
+      expressionAttributeValues[':status'] = updates.status;
+
+      if (updates.status === 'approved') {
+        updateExpressions.push('#approved_at = :approved_at');
+        expressionAttributeNames['#approved_at'] = 'approved_at';
+        expressionAttributeValues[':approved_at'] = Date.now();
+      }
+    }
+
+    if (updates.featured !== undefined) {
+      updateExpressions.push('#featured = :featured');
+      expressionAttributeNames['#featured'] = 'featured';
+      expressionAttributeValues[':featured'] = updates.featured;
+    }
+
+    const command = new UpdateCommand({
+      TableName: TABLE_NAME,
+      Key: { id },
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: 'ALL_NEW'
+    });
+
+    const response = await docClient.send(command);
+    return response.Attributes as Review;
+  } catch (error) {
+    console.error('Error updating review:', error);
+    throw error;
+  }
+}
+
+// Delete a review
+export async function deleteReview(id: string): Promise<boolean> {
+  try {
+    const command = new DeleteCommand({
+      TableName: TABLE_NAME,
+      Key: { id }
+    });
+
+    await docClient.send(command);
+    return true;
+  } catch (error) {
+    console.error('Error deleting review:', error);
     throw error;
   }
 }
