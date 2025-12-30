@@ -19,40 +19,27 @@ export interface Review {
   updated_at: string;
 }
 
-// Create Supabase client
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  console.log('Creating Supabase client...');
-  console.log('URL:', url);
-  console.log('Key length:', key?.length);
-  console.log('Key defined:', !!key);
-
-  if (!url || !key) {
-    throw new Error(`Missing Supabase credentials: URL=${!!url}, Key=${!!key}`);
-  }
-
-  return createClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
-}
-
 // GET /api/reviews - Fetch reviews
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const status = searchParams.get('status'); // 'approved', 'pending', 'rejected', or 'all'
 
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    // Create client directly - same as direct-supabase-test
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     let query = supabaseAdmin
       .from('reviews')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false});
 
     // Filter by status if provided
     if (status && status !== 'all') {
@@ -91,7 +78,16 @@ export async function GET(request: NextRequest) {
 // PATCH /api/reviews - Update review status/featured
 export async function PATCH(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
     const body = await request.json();
     const { id, status, featured } = body;
 
@@ -158,7 +154,16 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/reviews - Delete a review
 export async function DELETE(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
