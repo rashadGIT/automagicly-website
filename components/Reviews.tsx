@@ -51,22 +51,15 @@ export default function Reviews() {
     try {
       const response = await fetch('/api/reviews-simple');
       const data = await response.json();
-      // Filter for approved reviews with 3+ stars on client side
+      // Filter for approved reviews with rating > 3 (4 and 5 stars only)
       const approved = (data.reviews || []).filter((r: ReviewFormData) =>
-        r.status === 'approved' && r.rating >= 3
+        r.status === 'approved' && r.rating > 3
       );
       setApprovedReviews(approved);
 
-      // Separate featured and non-featured reviews
-      const featured = approved.filter((r: ReviewFormData) => r.featured);
-      const nonFeatured = approved.filter((r: ReviewFormData) => !r.featured);
-
-      // Shuffle non-featured reviews
-      const shuffled = nonFeatured.sort(() => 0.5 - Math.random());
-
-      // Show: Featured first + 5-8 random others
-      const randomOthers = shuffled.slice(0, 8);
-      setDisplayReviews([...featured, ...randomOthers]);
+      // Randomize ALL reviews (including featured ones)
+      const randomized = [...approved].sort(() => 0.5 - Math.random());
+      setDisplayReviews(randomized);
     } catch (error) {
       console.error('Error loading approved reviews:', error);
     } finally {
