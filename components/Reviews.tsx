@@ -49,9 +49,12 @@ export default function Reviews() {
   const loadApprovedReviews = async () => {
     setLoadingApproved(true);
     try {
-      const response = await fetch('/api/reviews-simple?status=approved');
+      const response = await fetch('/api/reviews-simple');
       const data = await response.json();
-      const approved = data.reviews || [];
+      // Filter for approved reviews with 3+ stars on client side
+      const approved = (data.reviews || []).filter((r: ReviewFormData) =>
+        r.status === 'approved' && r.rating >= 3
+      );
       setApprovedReviews(approved);
 
       // Separate featured and non-featured reviews
