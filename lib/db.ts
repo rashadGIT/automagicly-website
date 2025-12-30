@@ -4,20 +4,16 @@ import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, Delete
 const TABLE_NAME = 'automagicly-reviews';
 const GSI_NAME = 'status-created_at-index';
 
-let docClient: DynamoDBDocumentClient | null = null;
-
 function getDocClient() {
-  if (!docClient) {
-    const client = new DynamoDBClient({
-      region: process.env.REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.DB_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
-      }
-    });
-    docClient = DynamoDBDocumentClient.from(client);
-  }
-  return docClient;
+  // Always create a fresh client to avoid caching issues
+  const client = new DynamoDBClient({
+    region: process.env.REGION || 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.DB_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+    }
+  });
+  return DynamoDBDocumentClient.from(client);
 }
 
 // Type definitions for our database
