@@ -1,19 +1,17 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBClient, ScanCommand, QueryCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 const TABLE_NAME = 'automagicly-reviews';
 const GSI_NAME = 'status-created_at-index';
 
-function getDocClient() {
-  // Always create a fresh client to avoid caching issues
-  const client = new DynamoDBClient({
+function getClient() {
+  return new DynamoDBClient({
     region: process.env.REGION || 'us-east-1',
     credentials: {
       accessKeyId: process.env.DB_ACCESS_KEY_ID!,
       secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
     }
   });
-  return DynamoDBDocumentClient.from(client);
 }
 
 // Type definitions for our database
@@ -37,7 +35,7 @@ export interface Review {
 // Get reviews with optional filtering
 export async function getReviews(status?: string): Promise<Review[]> {
   try {
-    const client = getDocClient();
+    const client = getClient();
 
     if (status && status !== 'all') {
       // Use GSI to query by status
@@ -48,14 +46,14 @@ export async function getReviews(status?: string): Promise<Review[]> {
         ExpressionAttributeNames: {
           '#status': 'status'
         },
-        ExpressionAttributeValues: {
+        ExpressionAttributeValues: marshall({
           ':status': status
-        },
+        }),
         ScanIndexForward: false // Sort by created_at DESC
       });
 
       const response = await client.send(command);
-      const reviews = response.Items as Review[];
+      const reviews = response.Items?.map(item => unmarshall(item) as Review) || [];
 
       // Filter for approved reviews with 3+ stars
       if (!status || status === 'approved') {
@@ -70,7 +68,7 @@ export async function getReviews(status?: string): Promise<Review[]> {
       });
 
       const response = await client.send(command);
-      const reviews = (response.Items as Review[]) || [];
+      const reviews = response.Items?.map(item => unmarshall(item) as Review) || [];
 
       // Sort by created_at DESC
       reviews.sort((a, b) => b.created_at - a.created_at);
@@ -86,7 +84,7 @@ export async function getReviews(status?: string): Promise<Review[]> {
 // Create a new review
 export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>): Promise<Review> {
   try {
-    const client = getDocClient();
+    const client = getClient();
     const now = Date.now();
     const id = crypto.randomUUID();
 
@@ -97,9 +95,9 @@ export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'u
       updated_at: now
     };
 
-    const command = new PutCommand({
+    const command = new PutItemCommand({
       TableName: TABLE_NAME,
-      Item: newReview
+      Item: marshall(newReview)
     });
 
     await client.send(command);
@@ -116,12 +114,12 @@ export async function updateReview(
   updates: { status?: 'pending' | 'approved' | 'rejected'; featured?: boolean }
 ): Promise<Review | null> {
   try {
-    const client = getDocClient();
+    const client = getClient();
     const updateExpressions: string[] = ['#updated_at = :updated_at'];
     const expressionAttributeNames: Record<string, string> = {
       '#updated_at': 'updated_at'
     };
-    const expressionAttributeValues: Record<string, any> = {
+    const expressionAttributeValues: any = {
       ':updated_at': Date.now()
     };
 
@@ -143,17 +141,17 @@ export async function updateReview(
       expressionAttributeValues[':featured'] = updates.featured;
     }
 
-    const command = new UpdateCommand({
+    const command = new UpdateItemCommand({
       TableName: TABLE_NAME,
-      Key: { id },
+      Key: marshall({ id }),
       UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
+      ExpressionAttributeValues: marshall(expressionAttributeValues),
       ReturnValues: 'ALL_NEW'
     });
 
     const response = await client.send(command);
-    return response.Attributes as Review;
+    return response.Attributes ? unmarshall(response.Attributes) as Review : null;
   } catch (error) {
     console.error('Error updating review:', error);
     throw error;
@@ -163,10 +161,10 @@ export async function updateReview(
 // Delete a review
 export async function deleteReview(id: string): Promise<boolean> {
   try {
-    const client = getDocClient();
-    const command = new DeleteCommand({
+    const client = getClient();
+    const command = new DeleteItemCommand({
       TableName: TABLE_NAME,
-      Key: { id }
+      Key: marshall({ id })
     });
 
     await client.send(command);
