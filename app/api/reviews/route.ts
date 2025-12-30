@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
         ExpressionAttributeNames: {
           '#status': 'status'
         },
-        ExpressionAttributeValues: {
-          ':status': { S: status }
-        },
+        ExpressionAttributeValues: marshall({
+          ':status': status
+        }),
         ScanIndexForward: false
       });
 
