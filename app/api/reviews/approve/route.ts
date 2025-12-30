@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Create Supabase client
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+}
 
 // Email-based approval endpoint with Supabase
 // URL: /api/reviews/approve?token=xxx
@@ -23,6 +37,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Find review by token
     const { data: review, error: fetchError } = await supabaseAdmin
       .from('reviews')

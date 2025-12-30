@@ -1,5 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, type Review } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Type definitions for our database
+export interface Review {
+  id: string;
+  name?: string;
+  email?: string;
+  company?: string;
+  rating: number;
+  review_text: string;
+  service_type: string;
+  status: 'pending' | 'approved' | 'rejected';
+  featured?: boolean;
+  approval_token?: string;
+  token_expires_at?: string;
+  created_at: string;
+  approved_at?: string;
+  updated_at: string;
+}
+
+// Create Supabase client
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+}
 
 // GET /api/reviews - Fetch reviews
 export async function GET(request: NextRequest) {
@@ -7,6 +39,8 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status'); // 'approved', 'pending', 'rejected', or 'all'
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     let query = supabaseAdmin
       .from('reviews')
       .select('*')
@@ -49,6 +83,7 @@ export async function GET(request: NextRequest) {
 // PATCH /api/reviews - Update review status/featured
 export async function PATCH(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
     const { id, status, featured } = body;
 
@@ -115,6 +150,7 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/reviews - Delete a review
 export async function DELETE(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
