@@ -64,9 +64,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Extract unique dates from events
+    // Only include events that are marked as "busy" (opaque)
+    // Transparent events = "Free" time, Opaque events = "Busy" time
     const busyDatesSet = new Set<string>();
 
     events.forEach((event) => {
+      // Skip transparent (free) events - only count opaque (busy) events
+      // If transparency is not set, default to opaque (busy)
+      if (event.transparency === 'transparent') {
+        console.log('Skipping transparent event:', event.summary);
+        return;
+      }
+
       // Get event start date (handle both all-day and timed events)
       const startDate = event.start?.date || event.start?.dateTime;
 
@@ -74,6 +83,7 @@ export async function GET(request: NextRequest) {
         // Convert to YYYY-MM-DD format
         const dateOnly = startDate.split('T')[0];
         busyDatesSet.add(dateOnly);
+        console.log('Added busy date:', dateOnly, 'from event:', event.summary);
       }
     });
 
