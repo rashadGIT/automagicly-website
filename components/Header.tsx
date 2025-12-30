@@ -27,7 +27,9 @@ export default function Header() {
     { label: 'Coming Soon', id: 'coming-soon' },
   ];
 
-  const handleNavClick = (id: string) => {
+  const handleNavClick = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     scrollToElement(id);
     setIsMobileMenuOpen(false);
   };
@@ -59,7 +61,7 @@ export default function Header() {
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => handleNavClick(item.id)}
+                onClick={(e) => handleNavClick(e, item.id)}
                 className="text-gray-700 hover:text-brand-600 font-medium transition-colors relative group"
               >
                 {item.label}
@@ -67,7 +69,7 @@ export default function Header() {
               </button>
             ))}
             <button
-              onClick={() => handleNavClick('booking')}
+              onClick={(e) => handleNavClick(e, 'booking')}
               className="btn-primary flex items-center gap-2 !py-2 !px-6"
             >
               <Zap className="w-4 h-4" />
@@ -105,7 +107,7 @@ export default function Header() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => handleNavClick(item.id)}
+                    onClick={(e) => handleNavClick(e, item.id)}
                     className="text-left text-gray-700 hover:text-brand-600 font-medium py-2 transition-colors hover:translate-x-2 duration-200"
                   >
                     {item.label}
@@ -115,7 +117,7 @@ export default function Header() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: navItems.length * 0.05 }}
-                  onClick={() => handleNavClick('booking')}
+                  onClick={(e) => handleNavClick(e, 'booking')}
                   className="btn-primary flex items-center justify-center gap-2 !py-3"
                 >
                   <Zap className="w-4 h-4" />
