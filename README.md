@@ -293,3 +293,4 @@ All rights reserved. This is proprietary software for AutoMagicly.
 ## Support
 
 For questions or issues, contact: hello@automagicly.com
+
