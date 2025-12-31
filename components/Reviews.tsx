@@ -80,21 +80,15 @@ export default function Reviews() {
     setSubmitError('');
 
     try {
-      // Clean up formData - only include non-empty fields
+      // Clean up formData and set defaults for optional fields
       const cleanData: any = {
+        name: formData.name && formData.name.trim() ? formData.name.trim() : 'Anonymous',
         email: formData.email,
+        company: formData.company && formData.company.trim() ? formData.company.trim() : 'Anonymous Company',
         rating: formData.rating,
         reviewText: formData.reviewText,
         serviceType: formData.serviceType,
       };
-
-      // Only include name and company if they have values
-      if (formData.name && formData.name.trim()) {
-        cleanData.name = formData.name.trim();
-      }
-      if (formData.company && formData.company.trim()) {
-        cleanData.company = formData.company.trim();
-      }
 
       const success = await sendToN8N(WEBHOOK_URL, cleanData);
 
@@ -200,7 +194,7 @@ export default function Reviews() {
 
                   <div className="border-t pt-4">
                     <p className="font-semibold text-gray-900">{review.name || 'Anonymous'}</p>
-                    {review.company && (
+                    {review.company && review.company !== 'Anonymous Company' && (
                       <p className="text-sm text-gray-600">{review.company}</p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">{review.service_type || review.serviceType}</p>
