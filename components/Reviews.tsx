@@ -80,7 +80,23 @@ export default function Reviews() {
     setSubmitError('');
 
     try {
-      const success = await sendToN8N(WEBHOOK_URL, formData);
+      // Clean up formData - only include non-empty fields
+      const cleanData: any = {
+        email: formData.email,
+        rating: formData.rating,
+        reviewText: formData.reviewText,
+        serviceType: formData.serviceType,
+      };
+
+      // Only include name and company if they have values
+      if (formData.name && formData.name.trim()) {
+        cleanData.name = formData.name.trim();
+      }
+      if (formData.company && formData.company.trim()) {
+        cleanData.company = formData.company.trim();
+      }
+
+      const success = await sendToN8N(WEBHOOK_URL, cleanData);
 
       if (success) {
         // Store in localStorage
