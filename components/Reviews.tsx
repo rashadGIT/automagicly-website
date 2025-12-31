@@ -57,15 +57,21 @@ export default function Reviews() {
       );
       setApprovedReviews(approved);
 
+      console.log('All approved reviews:', approved.map((r: ReviewFormData) => ({ name: r.name, featured: r.featured })));
+
       // Separate featured and non-featured reviews
-      const featured = approved.filter((r: ReviewFormData) => r.featured);
-      const nonFeatured = approved.filter((r: ReviewFormData) => !r.featured);
+      const featured = approved.filter((r: ReviewFormData) => r.featured === true);
+      const nonFeatured = approved.filter((r: ReviewFormData) => r.featured !== true);
+
+      console.log('Featured reviews:', featured.map((r: ReviewFormData) => r.name));
+      console.log('Non-featured reviews:', nonFeatured.map((r: ReviewFormData) => r.name));
 
       // Randomize non-featured reviews
       const randomizedNonFeatured = [...nonFeatured].sort(() => 0.5 - Math.random());
 
       // Show featured first, then random non-featured, limit to 3 total
       const combined = [...featured, ...randomizedNonFeatured].slice(0, 3);
+      console.log('Final display order:', combined.map((r: ReviewFormData) => r.name));
       setDisplayReviews(combined);
     } catch (error) {
       console.error('Error loading approved reviews:', error);
