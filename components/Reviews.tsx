@@ -183,9 +183,7 @@ export default function Reviews() {
                   <p className="text-gray-700 mb-4 italic">"{review.review_text || review.reviewText}"</p>
 
                   <div className="border-t pt-4">
-                    {review.name && (
-                      <p className="font-semibold text-gray-900">{review.name}</p>
-                    )}
+                    <p className="font-semibold text-gray-900">{review.name || 'Anonymous'}</p>
                     {review.company && (
                       <p className="text-sm text-gray-600">{review.company}</p>
                     )}
