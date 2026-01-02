@@ -93,10 +93,8 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            source: 'automagicly-website',
-            submittedAt: new Date().toISOString(),
-            sessionId,
-            message
+            message,
+            conversationId: sessionId
           }),
         });
 
@@ -106,7 +104,17 @@ export async function POST(request: NextRequest) {
 
         const n8nData = await n8nResponse.json();
 
-        // Check if n8n blocked the request
+        // Handle RAG chatbot response format
+        if (n8nData.success && n8nData.message) {
+          return NextResponse.json({
+            reply: n8nData.message,
+            sources: n8nData.sources || [],
+            conversationId: n8nData.conversationId,
+            timestamp: n8nData.timestamp
+          });
+        }
+
+        // Check if n8n blocked the request (fallback for other n8n workflows)
         if (n8nData.blocked) {
           return NextResponse.json({
             reply: n8nData.reason === 'pricing_request'
@@ -117,8 +125,9 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // Fallback for unexpected response format
         return NextResponse.json({
-          reply: n8nData.reply || getDefaultFallbackResponse()
+          reply: n8nData.reply || n8nData.message || getDefaultFallbackResponse()
         });
       } catch (error) {
         console.error('Error calling n8n webhook:', error);
