@@ -246,7 +246,9 @@ export default function Reviews() {
                 return (
                   <div
                     key={index}
-                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 relative"
+                    className={`bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 relative ${
+                      isExpanded ? 'h-auto' : 'h-[400px]'
+                    } flex flex-col`}
                   >
                     {review.featured && (
                       <div className="absolute top-4 right-4">
@@ -258,38 +260,40 @@ export default function Reviews() {
                       {renderStars(review.rating)}
                     </div>
 
-                    <p className="text-gray-700 mb-4 italic transition-all duration-300">
-                      "{displayText}{needsTruncation && !isExpanded && '...'}"
-                    </p>
+                    <div className={isExpanded ? '' : 'flex-1 overflow-hidden'}>
+                      <p className="text-gray-700 mb-4 italic transition-all duration-300">
+                        "{displayText}{needsTruncation && !isExpanded && '...'}"
+                      </p>
 
-                    {needsTruncation && (
-                      <button
-                        onClick={handleExpand}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleExpand();
-                          }
-                        }}
-                        className={`text-sm font-medium mb-4 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 ${
-                          isLongReview
-                            ? 'text-purple-600 hover:text-purple-700'
-                            : 'text-blue-600 hover:text-blue-700'
-                        }`}
-                        aria-expanded={isExpanded}
-                        aria-label={isExpanded ? 'Show less' : isLongReview ? 'Read full review in panel' : 'Read more'}
-                      >
-                        {isExpanded ? (
-                          <>Show less ↑</>
-                        ) : isLongReview ? (
-                          <>Read full review →</>
-                        ) : (
-                          <>Read more ↓</>
-                        )}
-                      </button>
-                    )}
+                      {needsTruncation && (
+                        <button
+                          onClick={handleExpand}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleExpand();
+                            }
+                          }}
+                          className={`text-sm font-medium mb-4 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 ${
+                            isLongReview
+                              ? 'text-purple-600 hover:text-purple-700'
+                              : 'text-blue-600 hover:text-blue-700'
+                          }`}
+                          aria-expanded={isExpanded}
+                          aria-label={isExpanded ? 'Show less' : isLongReview ? 'Read full review in panel' : 'Read more'}
+                        >
+                          {isExpanded ? (
+                            <>Show less ↑</>
+                          ) : isLongReview ? (
+                            <>Read full review →</>
+                          ) : (
+                            <>Read more ↓</>
+                          )}
+                        </button>
+                      )}
+                    </div>
 
-                    <div className="border-t pt-4">
+                    <div className="border-t pt-4 mt-auto">
                       <p className="font-semibold text-gray-900">{review.name || 'Anonymous'}</p>
                       {review.company && review.company !== 'Anonymous Company' && (
                         <p className="text-sm text-gray-600">{review.company}</p>
