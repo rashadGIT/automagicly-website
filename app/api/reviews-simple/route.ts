@@ -34,10 +34,10 @@ export async function GET() {
       }
     });
   } catch (error: any) {
+    console.error('Error fetching reviews:', error);
     return NextResponse.json({
       success: false,
-      error: error.message,
-      errorName: error.name
+      error: 'Failed to fetch reviews'
     }, { status: 500 });
   }
 }

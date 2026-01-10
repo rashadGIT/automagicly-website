@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { ReviewFormData } from '@/lib/types';
-import { sendToN8N } from '@/lib/utils';
+import { sendToN8N, sanitizeHtml } from '@/lib/utils';
 import AIReviewHelper from './AIReviewHelper';
 
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL;
@@ -82,21 +82,15 @@ export default function Reviews() {
       );
       setApprovedReviews(approved);
 
-      console.log('All approved reviews:', approved.map((r: ReviewFormData) => ({ name: r.name, featured: r.featured })));
-
       // Separate featured and non-featured reviews
       const featured = approved.filter((r: ReviewFormData) => r.featured === true);
       const nonFeatured = approved.filter((r: ReviewFormData) => r.featured !== true);
-
-      console.log('Featured reviews:', featured.map((r: ReviewFormData) => r.name));
-      console.log('Non-featured reviews:', nonFeatured.map((r: ReviewFormData) => r.name));
 
       // Randomize non-featured reviews
       const randomizedNonFeatured = [...nonFeatured].sort(() => 0.5 - Math.random());
 
       // Show featured first, then random non-featured, limit to 3 total
       const combined = [...featured, ...randomizedNonFeatured].slice(0, 3);
-      console.log('Final display order:', combined.map((r: ReviewFormData) => r.name));
       setDisplayReviews(combined);
     } catch (error) {
       console.error('Error loading approved reviews:', error);
@@ -262,7 +256,7 @@ export default function Reviews() {
 
                     <div className={isExpanded ? '' : 'flex-1 overflow-hidden'}>
                       <p className="text-gray-700 mb-4 italic transition-all duration-300">
-                        "{displayText}{needsTruncation && !isExpanded && '...'}"
+                        "{sanitizeHtml(displayText)}{needsTruncation && !isExpanded && '...'}"
                       </p>
 
                       {needsTruncation && (
@@ -294,11 +288,11 @@ export default function Reviews() {
                     </div>
 
                     <div className="border-t pt-4 mt-auto">
-                      <p className="font-semibold text-gray-900">{review.name || 'Anonymous'}</p>
+                      <p className="font-semibold text-gray-900">{sanitizeHtml(review.name || 'Anonymous')}</p>
                       {review.company && review.company !== 'Anonymous Company' && (
-                        <p className="text-sm text-gray-600">{review.company}</p>
+                        <p className="text-sm text-gray-600">{sanitizeHtml(review.company)}</p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">{review.service_type || review.serviceType}</p>
+                      <p className="text-xs text-gray-500 mt-1">{sanitizeHtml(review.service_type || review.serviceType)}</p>
                     </div>
                   </div>
                 );
@@ -611,18 +605,18 @@ export default function Reviews() {
                   </div>
 
                   <blockquote className="text-gray-700 text-lg italic leading-relaxed mb-6">
-                    "{drawerReview.review_text || drawerReview.reviewText}"
+                    "{sanitizeHtml(drawerReview.review_text || drawerReview.reviewText)}"
                   </blockquote>
 
                   <div className="border-t pt-6">
                     <p className="font-semibold text-gray-900 text-lg">
-                      {drawerReview.name || 'Anonymous'}
+                      {sanitizeHtml(drawerReview.name || 'Anonymous')}
                     </p>
                     {drawerReview.company && drawerReview.company !== 'Anonymous Company' && (
-                      <p className="text-gray-600 mt-2">{drawerReview.company}</p>
+                      <p className="text-gray-600 mt-2">{sanitizeHtml(drawerReview.company)}</p>
                     )}
                     <p className="text-sm text-gray-500 mt-2">
-                      {drawerReview.service_type || drawerReview.serviceType}
+                      {sanitizeHtml(drawerReview.service_type || drawerReview.serviceType)}
                     </p>
                   </div>
                 </div>

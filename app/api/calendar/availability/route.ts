@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { bookingQuerySchema } from '@/lib/validation';
 
 // Google Calendar API configuration
 const GOOGLE_CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
@@ -7,27 +8,31 @@ const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
 export async function GET(request: NextRequest) {
-  console.log('Received request for calendar availability, hahahaha');
-  console.log('GOOGLE_SERVICE_ACCOUNT_EMAIL:', GOOGLE_SERVICE_ACCOUNT_EMAIL ? 'Set' : 'Not set');
-  console.log('GOOGLE_PRIVATE_KEY:', GOOGLE_PRIVATE_KEY ? `Set (${GOOGLE_PRIVATE_KEY.substring(0, 50)}...)` : 'Not set');
-  console.log('GOOGLE_CALENDAR_ID:', GOOGLE_CALENDAR_ID);
-
   try {
     // Get date range from query params (default to next 60 days)
     const searchParams = request.nextUrl.searchParams;
-    const startDate = searchParams.get('start') || new Date().toISOString().split('T')[0];
-    const endDate = searchParams.get('end') || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const timezone = searchParams.get('timezone') || 'UTC';
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+    const timezone = searchParams.get('timezone');
 
-    console.log('Date range:', startDate, 'to', endDate, 'timezone:', timezone);
+    // Validate query parameters
+    const validation = bookingQuerySchema.safeParse({ start, end, timezone });
+    if (!validation.success) {
+      return NextResponse.json({
+        busyDates: [],
+        error: 'Invalid query parameters',
+        details: validation.error.issues
+      }, { status: 400 });
+    }
+
+    const startDate = start || new Date().toISOString().split('T')[0];
+    const endDate = end || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const tz = timezone || 'UTC';
 
     // If Google Calendar credentials are not configured, return empty array
     if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
-      console.log('❌ Google Calendar API not configured, returning no busy dates');
       return NextResponse.json({ busyDates: [] });
     }
-
-    console.log('✅ Credentials configured, calling Google Calendar API...');
 
     // Initialize Google Calendar API with service account
     const auth = new google.auth.JWT({
@@ -43,25 +48,12 @@ export async function GET(request: NextRequest) {
       calendarId: GOOGLE_CALENDAR_ID,
       timeMin: new Date(startDate + 'T00:00:00').toISOString(),
       timeMax: new Date(endDate + 'T23:59:59').toISOString(),
-      timeZone: timezone,
+      timeZone: tz,
       singleEvents: true,
       orderBy: 'startTime',
     });
 
     const events = response.data.items || [];
-    console.log('📋 Google Calendar API response:', {
-      totalEvents: events.length,
-      calendarId: GOOGLE_CALENDAR_ID,
-      hasEvents: events.length > 0
-    });
-
-    if (events.length > 0) {
-      console.log('First event:', {
-        summary: events[0].summary,
-        start: events[0].start,
-        end: events[0].end
-      });
-    }
 
     // Extract unique dates from events
     // Treat ALL calendar events as busy, regardless of transparency
@@ -75,14 +67,11 @@ export async function GET(request: NextRequest) {
         // Convert to YYYY-MM-DD format
         const dateOnly = startDate.split('T')[0];
         busyDatesSet.add(dateOnly);
-        console.log('Added busy date:', dateOnly, 'from event:', event.summary, 'transparency:', event.transparency);
       }
     });
 
     // Convert Set to sorted array
     const busyDates = Array.from(busyDatesSet).sort();
-
-    console.log('📅 Found', busyDates.length, 'busy dates:', busyDates);
 
     return NextResponse.json({ busyDates });
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { reviewUpdateSchema, reviewDeleteSchema, reviewQuerySchema } from '@/lib/validation';
 
 // Type definitions for our database
 export interface Review {
@@ -24,15 +25,20 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const status = searchParams.get('status'); // 'approved', 'pending', 'rejected', or 'all'
 
+  // Validate query parameters
+  const validation = reviewQuerySchema.safeParse({ status });
+  if (!validation.success) {
+    return NextResponse.json({
+      reviews: [],
+      error: 'Invalid query parameters',
+      details: validation.error.issues
+    }, { status: 400 });
+  }
+
   try {
     // Create client directly - same as direct-supabase-test
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    console.log('Reviews API - URL:', supabaseUrl);
-    console.log('Reviews API - Key length:', supabaseKey?.length);
-    console.log('Reviews API - URL defined:', !!supabaseUrl);
-    console.log('Reviews API - Key defined:', !!supabaseKey);
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json({
@@ -86,7 +92,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching reviews:', error);
     return NextResponse.json({
       reviews: [],
-      error: error.message
+      error: 'Failed to fetch reviews'
     }, { status: 500 });
   }
 }
@@ -94,6 +100,20 @@ export async function GET(request: NextRequest) {
 // PATCH /api/reviews - Update review status/featured
 export async function PATCH(request: NextRequest) {
   try {
+    const body = await request.json();
+
+    // Validate input with zod
+    const validation = reviewUpdateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid request data',
+        details: validation.error.issues
+      }, { status: 400 });
+    }
+
+    const { id, status, featured } = validation.data;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -104,28 +124,12 @@ export async function PATCH(request: NextRequest) {
       }
     });
 
-    const body = await request.json();
-    const { id, status, featured } = body;
-
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing review id'
-      }, { status: 400 });
-    }
-
     // Build update object
     const updates: Partial<Review> = {
       updated_at: new Date().toISOString()
     };
 
     if (status) {
-      if (!['approved', 'rejected', 'pending'].includes(status)) {
-        return NextResponse.json({
-          success: false,
-          error: 'Invalid status'
-        }, { status: 400 });
-      }
       updates.status = status;
       if (status === 'approved' && !updates.approved_at) {
         updates.approved_at = new Date().toISOString();
@@ -148,7 +152,7 @@ export async function PATCH(request: NextRequest) {
       console.error('Supabase error:', error);
       return NextResponse.json({
         success: false,
-        error: error.message
+        error: 'Failed to update review'
       }, { status: 500 });
     }
 
@@ -162,7 +166,7 @@ export async function PATCH(request: NextRequest) {
     console.error('Error updating review:', error);
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: 'Failed to update review'
     }, { status: 500 });
   }
 }
@@ -170,6 +174,19 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/reviews - Delete a review
 export async function DELETE(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const id = searchParams.get('id');
+
+    // Validate input with zod
+    const validation = reviewDeleteSchema.safeParse({ id });
+    if (!validation.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid request data',
+        details: validation.error.issues
+      }, { status: 400 });
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -180,26 +197,16 @@ export async function DELETE(request: NextRequest) {
       }
     });
 
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing review id'
-      }, { status: 400 });
-    }
-
     const { error } = await supabaseAdmin
       .from('reviews')
       .delete()
-      .eq('id', id);
+      .eq('id', validation.data.id);
 
     if (error) {
       console.error('Supabase error:', error);
       return NextResponse.json({
         success: false,
-        error: error.message
+        error: 'Failed to delete review'
       }, { status: 500 });
     }
 
@@ -212,7 +219,7 @@ export async function DELETE(request: NextRequest) {
     console.error('Error deleting review:', error);
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: 'Failed to delete review'
     }, { status: 500 });
   }
 }

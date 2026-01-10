@@ -74,19 +74,14 @@ export default function CustomBooking() {
       setIsLoadingCalendar(false);
     };
 
-    console.log("Loading busy dates", busyDates);
-
     loadBusyDates();
   }, []);
 
-  console.log("Busy dates:", busyDates);
   // Disable past dates and busy dates from calendar
   const disabledDays = [
     { before: addDays(new Date(), 1) },
     ...busyDates // Dates when you have calendar events
   ];
-
-  console.log("Disabled days:", disabledDays);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelected(date);

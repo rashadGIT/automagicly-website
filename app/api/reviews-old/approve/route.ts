@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
         <head><title>Error</title></head>
         <body style="font-family: Arial; text-align: center; padding: 50px;">
           <h1 style="color: #dc2626;">❌ Error</h1>
-          <p>Failed to approve review: ${error.message}</p>
+          <p>Failed to approve review. Please try again or contact support.</p>
           <a href="/admin/reviews" style="color: #2563eb;">Go to Admin Dashboard</a>
         </body>
       </html>`,

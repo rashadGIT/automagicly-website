@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isPricingRequest, containsProfanity } from '@/lib/utils';
+import { chatMessageSchema } from '@/lib/validation';
 
 const N8N_CHAT_WEBHOOK_URL = process.env.N8N_CHAT_WEBHOOK_URL;
 
@@ -8,19 +9,39 @@ const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
 const RATE_LIMIT_MAX = 10; // 10 messages per minute
 
-function checkRateLimit(sessionId: string): boolean {
+// Global IP-based rate limit (more restrictive)
+const ipRateLimitMap = new Map<string, number[]>();
+const IP_RATE_LIMIT_MAX = 20; // 20 messages per minute per IP
+
+function getClientIp(request: NextRequest): string {
+  // Check various headers for the real IP address
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  const cfConnectingIp = request.headers.get('cf-connecting-ip');
+
+  if (forwarded) {
+    // x-forwarded-for may contain multiple IPs, use the first one
+    return forwarded.split(',')[0].trim();
+  }
+
+  return cfConnectingIp || realIp || 'unknown';
+}
+
+function checkRateLimit(identifier: string, isIp: boolean = false): boolean {
   const now = Date.now();
-  const timestamps = rateLimitMap.get(sessionId) || [];
+  const map = isIp ? ipRateLimitMap : rateLimitMap;
+  const max = isIp ? IP_RATE_LIMIT_MAX : RATE_LIMIT_MAX;
+  const timestamps = map.get(identifier) || [];
 
   // Filter out timestamps outside the window
   const recentTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
 
-  if (recentTimestamps.length >= RATE_LIMIT_MAX) {
+  if (recentTimestamps.length >= max) {
     return false; // Rate limit exceeded
   }
 
   recentTimestamps.push(now);
-  rateLimitMap.set(sessionId, recentTimestamps);
+  map.set(identifier, recentTimestamps);
   return true;
 }
 
@@ -35,29 +56,42 @@ function getDefaultFallbackResponse(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, sessionId } = body;
 
-    if (!message || typeof message !== 'string') {
+    // Validate input with zod
+    const validation = chatMessageSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { reply: 'Please provide a valid message.' },
+        {
+          reply: 'Invalid request data.',
+          details: validation.error.issues
+        },
         { status: 400 }
       );
     }
 
-    if (!sessionId) {
-      return NextResponse.json(
-        { reply: 'Session ID required.' },
-        { status: 400 }
-      );
-    }
+    const { message, sessionId } = validation.data;
 
-    // Rate limiting
+    // Get client IP for additional rate limiting
+    const clientIp = getClientIp(request);
+
+    // Check both session-based and IP-based rate limits
     if (!checkRateLimit(sessionId)) {
       return NextResponse.json(
         {
           reply: 'You\'re sending messages too quickly. Please wait a moment and try again.',
           blocked: true,
           reason: 'rate_limit'
+        },
+        { status: 429 }
+      );
+    }
+
+    if (!checkRateLimit(clientIp, true)) {
+      return NextResponse.json(
+        {
+          reply: 'Too many requests from your network. Please wait a moment and try again.',
+          blocked: true,
+          reason: 'ip_rate_limit'
         },
         { status: 429 }
       );

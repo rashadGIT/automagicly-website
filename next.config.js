@@ -12,6 +12,43 @@ const nextConfig = {
     DB_SECRET_ACCESS_KEY: process.env.DB_SECRET_ACCESS_KEY,
     REGION: process.env.REGION,
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-inline needed for Next.js
+              "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://*.n8n.cloud https://*.supabase.co https://www.googleapis.com",
+              "frame-ancestors 'none'",
+            ].join('; ')
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          }
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

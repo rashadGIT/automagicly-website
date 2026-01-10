@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { sanitizeHtml } from '@/lib/utils';
 
 interface Review {
   id: string;
@@ -239,7 +240,7 @@ export default function AdminReviews() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-bold text-gray-900">
-                        {review.name || 'Anonymous'}
+                        {sanitizeHtml(review.name || 'Anonymous')}
                       </h3>
                       <span
                         className={`text-xs px-3 py-1 rounded-full font-semibold ${
@@ -272,13 +273,13 @@ export default function AdminReviews() {
                       )}
                     </div>
                     {review.email && (
-                      <p className="text-sm text-gray-600">📧 {review.email}</p>
+                      <p className="text-sm text-gray-600">📧 {sanitizeHtml(review.email)}</p>
                     )}
                     {review.company && (
-                      <p className="text-sm text-gray-600">🏢 {review.company}</p>
+                      <p className="text-sm text-gray-600">🏢 {sanitizeHtml(review.company)}</p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
-                      Service: {review.serviceType} • Submitted: {new Date(review.submittedAt).toLocaleDateString()}
+                      Service: {sanitizeHtml(review.serviceType)} • Submitted: {new Date(review.submittedAt).toLocaleDateString()}
                     </p>
                   </div>
                   {renderStars(review.rating)}
@@ -286,7 +287,7 @@ export default function AdminReviews() {
 
                 {/* Review Text */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <p className="text-gray-800 whitespace-pre-wrap">{review.reviewText}</p>
+                  <p className="text-gray-800 whitespace-pre-wrap">{sanitizeHtml(review.reviewText)}</p>
                 </div>
 
                 {/* Actions */}
