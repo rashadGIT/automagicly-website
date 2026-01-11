@@ -1,0 +1,120 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run all tests
+        run: npm test
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for production
+        run: npm run build
+        env:
+          # Note: Real secrets should be in AWS Amplify env vars
+          # These are dummy values for build verification only
+          NEXTAUTH_SECRET: 'placeholder-secret-should-be-in-amplify-env-vars'
+          NEXTAUTH_URL: 'https://yourdomain.com'
+          ADMIN_EMAIL: 'placeholder@example.com'
+          ADMIN_PASSWORD_HASH: '$2a$10$placeholder'
+          DB_ACCESS_KEY_ID: 'placeholder'
+          DB_SECRET_ACCESS_KEY: 'placeholder'
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: 'placeholder@iam.gserviceaccount.com'
+          GOOGLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nplaceholder\n-----END PRIVATE KEY-----'
+          GOOGLE_CALENDAR_ID: 'placeholder@group.calendar.google.com'
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: .next/
+
+  # Uncomment and configure when ready to auto-deploy
+  # deploy:
+  #   name: Deploy to AWS Amplify
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: us-east-1
+  #
+  #     - name: Trigger Amplify deployment
+  #       run: |
+  #         aws amplify start-job \
+  #           --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+  #           --branch-name main \
+  #           --job-type RELEASE
+  #
+  #     - name: Wait for deployment
+  #       run: |
+  #         echo "Deployment triggered. Check AWS Amplify console for status."
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: always()
+
+    steps:
+      - name: Check deployment status
+        run: |
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            echo "✅ Build successful! Ready for deployment."
+            echo "Note: Auto-deployment is disabled. Deploy manually via AWS Amplify Console."
+          else
+            echo "❌ Build failed. Check logs above."
+            exit 1
+          fi

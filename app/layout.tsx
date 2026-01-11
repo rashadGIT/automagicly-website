@@ -2,6 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+import { validateEnvironmentVariables } from '@/lib/env-validator';
+
+// Validate environment variables on server startup
+// This prevents the app from running with missing configuration
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
+  validateEnvironmentVariables();
+}
 
 const inter = Inter({ subsets: ['latin'] });
 
