@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, ScanCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -7,6 +7,7 @@ import { updateReview, deleteReview } from '@/lib/db';
 import { reviewUpdateSchema, reviewDeleteSchema } from '@/lib/validation';
 import { verifyCsrfToken, isAdmin } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { traceDynamoDB, addTraceAnnotation } from '@/lib/xray-config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,29 +36,49 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    const client = new DynamoDBClient({
+    const client = traceDynamoDB(new DynamoDBClient({
       region: process.env.REGION || 'us-east-1',
       credentials: {
         accessKeyId: process.env.DB_ACCESS_KEY_ID,
         secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
       }
-    });
+    }));
 
-    const command = new ScanCommand({
-      TableName: 'automagicly-reviews',
-    });
+    // Add trace annotation for filtering
+    addTraceAnnotation('status', status || 'all');
 
-    const response = await client.send(command);
-    let reviews = response.Items?.map(item => unmarshall(item)) || [];
+    let reviews: any[] = [];
 
-    // Filter by status if provided
+    // Use GSI for efficient queries when filtering by status
     if (status && status !== 'all') {
-      reviews = reviews.filter((r: any) => r.status === status);
+      // Query using the status-index GSI (much faster and cheaper than Scan)
+      const command = new QueryCommand({
+        TableName: 'automagicly-reviews',
+        IndexName: 'status-index',
+        KeyConditionExpression: '#status = :statusValue',
+        ExpressionAttributeNames: {
+          '#status': 'status'
+        },
+        ExpressionAttributeValues: {
+          ':statusValue': { S: status }
+        }
+      });
+
+      const response = await client.send(command);
+      reviews = response.Items?.map(item => unmarshall(item)) || [];
 
       // Filter for approved reviews with 3+ stars
       if (status === 'approved') {
         reviews = reviews.filter((r: any) => r.rating >= 3);
       }
+    } else {
+      // Fallback to Scan only when requesting all reviews (admin only)
+      const command = new ScanCommand({
+        TableName: 'automagicly-reviews',
+      });
+
+      const response = await client.send(command);
+      reviews = response.Items?.map(item => unmarshall(item)) || [];
     }
 
     // Sort by created_at DESC
