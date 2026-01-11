@@ -11,6 +11,18 @@ frontend:
         - echo "Node version:"
         - node --version
         - npm --version
+        # Write environment variables to .env.production for runtime access in Lambda
+        - echo "Writing environment variables to .env.production..."
+        - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env.production
+        - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
+        - echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env.production
+        - echo "ADMIN_PASSWORD_HASH=$ADMIN_PASSWORD_HASH" >> .env.production
+        - echo "DB_ACCESS_KEY_ID=$DB_ACCESS_KEY_ID" >> .env.production
+        - echo "DB_SECRET_ACCESS_KEY=$DB_SECRET_ACCESS_KEY" >> .env.production
+        - echo "GOOGLE_SERVICE_ACCOUNT_EMAIL=$GOOGLE_SERVICE_ACCOUNT_EMAIL" >> .env.production
+        - echo "GOOGLE_PRIVATE_KEY=$GOOGLE_PRIVATE_KEY" >> .env.production
+        - echo "GOOGLE_CALENDAR_ID=$GOOGLE_CALENDAR_ID" >> .env.production
+        - echo "REGION=$REGION" >> .env.production
     build:
       commands:
         - echo "Building Next.js application..."
