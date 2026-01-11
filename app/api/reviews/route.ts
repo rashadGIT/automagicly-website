@@ -7,7 +7,6 @@ import { updateReview, deleteReview } from '@/lib/db';
 import { reviewUpdateSchema, reviewDeleteSchema } from '@/lib/validation';
 import { verifyCsrfToken, isAdmin } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import { traceDynamoDB, addTraceAnnotation } from '@/lib/xray-config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,16 +35,16 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    const client = traceDynamoDB(new DynamoDBClient({
+    const client = new DynamoDBClient({
       region: process.env.REGION || 'us-east-1',
       credentials: {
         accessKeyId: process.env.DB_ACCESS_KEY_ID,
         secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
       }
-    }));
+    });
 
-    // Add trace annotation for filtering
-    addTraceAnnotation('status', status || 'all');
+    // X-Ray tracing disabled - enable Active Tracing in Lambda to use
+    // addTraceAnnotation('status', status || 'all');
 
     let reviews: any[] = [];
 
@@ -92,7 +91,6 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to fetch reviews', {
       path: '/api/reviews',
       method: 'GET',
-      status,
     }, error);
     return NextResponse.json({
       reviews: [],
