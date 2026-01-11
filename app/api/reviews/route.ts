@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DynamoDBClient, ScanCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getAuthOptions } from '@/lib/auth';
 import { updateReview, deleteReview } from '@/lib/db';
 import { reviewUpdateSchema, reviewDeleteSchema } from '@/lib/validation';
 import { verifyCsrfToken, isAdmin } from '@/lib/utils';
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const requestedStatus = searchParams.get('status');
 
     // Check authentication and authorization
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(getAuthOptions());
 
     // Only admin users can request non-approved reviews
     let status = requestedStatus;
@@ -127,7 +127,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Check authentication and admin role
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(getAuthOptions());
   if (!session || !isAdmin(session)) {
     return NextResponse.json({
       success: false,
@@ -206,7 +206,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Check authentication and admin role
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(getAuthOptions());
   if (!session || !isAdmin(session)) {
     return NextResponse.json({
       success: false,

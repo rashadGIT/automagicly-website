@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getAuthOptions } from '@/lib/auth';
 import { isAdmin } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
   // Require authentication and admin role for this admin-only endpoint
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(getAuthOptions());
   if (!session) {
     return NextResponse.json({
       success: false,
