@@ -6,7 +6,9 @@ import { validateEnvironmentVariables } from '@/lib/env-validator';
 
 // Validate environment variables on server startup
 // This prevents the app from running with missing configuration
-if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
+// Skip during build phase to allow Amplify deployments
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test' && !isBuildPhase) {
   validateEnvironmentVariables();
 }
 

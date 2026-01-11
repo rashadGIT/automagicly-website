@@ -1,0 +1,52 @@
+version: 1
+# AWS Amplify Build Configuration for AutoMagicly
+# This ensures proper Next.js SSR deployment with all required environment variables
+
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing dependencies..."
+        - npm ci
+        - echo "Node version:"
+        - node --version
+        - npm --version
+    build:
+      commands:
+        - echo "Building Next.js application..."
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
+
+# Environment variables needed (set these in Amplify Console):
+#
+# Required for Authentication:
+# - NEXTAUTH_SECRET (generate with: openssl rand -base64 32)
+# - NEXTAUTH_URL (your production URL, e.g., https://automagicly.com)
+# - ADMIN_EMAIL (your admin email)
+# - ADMIN_PASSWORD_HASH (bcrypt hash of admin password)
+#
+# Required for Database:
+# - DB_ACCESS_KEY_ID (AWS access key for DynamoDB)
+# - DB_SECRET_ACCESS_KEY (AWS secret key for DynamoDB)
+# - REGION (AWS region, default: us-east-1)
+#
+# Required for Google Calendar:
+# - GOOGLE_SERVICE_ACCOUNT_EMAIL (Google service account email)
+# - GOOGLE_PRIVATE_KEY (Google service account private key)
+# - GOOGLE_CALENDAR_ID (Your Google Calendar ID)
+#
+# Optional (for monitoring):
+# - NEXT_PUBLIC_ENABLE_RUM (set to 'true' to enable CloudWatch RUM)
+#
+# Webhooks (optional):
+# - NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL
+# - NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL
+# - NEXT_PUBLIC_N8N_REFERRALS_WEBHOOK_URL
+# - NEXT_PUBLIC_N8N_WAITLIST_WEBHOOK_URL
