@@ -1,8 +1,20 @@
 import { z } from 'zod';
 
 // Review validation schemas
+// Accept both UUID format (Supabase) and custom format (DynamoDB: review-timestamp-random)
+const reviewIdSchema = z.string().min(1).max(100).refine(
+  (id) => {
+    // Check if it's a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // Check if it's a valid DynamoDB format (review-timestamp-random)
+    const dynamoRegex = /^review-\d+-\d+$/;
+    return uuidRegex.test(id) || dynamoRegex.test(id);
+  },
+  'Invalid review ID format'
+);
+
 export const reviewUpdateSchema = z.object({
-  id: z.string().uuid('Invalid review ID format'),
+  id: reviewIdSchema,
   status: z.enum(['approved', 'rejected', 'pending']).optional(),
   featured: z.boolean().optional(),
 }).refine(data => data.status !== undefined || data.featured !== undefined, {
@@ -10,7 +22,7 @@ export const reviewUpdateSchema = z.object({
 });
 
 export const reviewDeleteSchema = z.object({
-  id: z.string().uuid('Invalid review ID format'),
+  id: reviewIdSchema,
 });
 
 export const reviewQuerySchema = z.object({
@@ -39,3 +51,15 @@ export const emailSchema = z.string().email('Invalid email address').max(255);
 
 // Rating validation
 export const ratingSchema = z.number().int().min(1).max(5);
+
+// Review submission validation
+export const reviewSubmissionSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long (max 100 characters)').optional(),
+  email: emailSchema.optional(),
+  company: z.string().max(100, 'Company name too long (max 100 characters)').optional(),
+  rating: ratingSchema,
+  reviewText: z.string()
+    .min(10, 'Review must be at least 10 characters')
+    .max(2000, 'Review too long (max 2000 characters)'),
+  serviceType: z.string().min(1, 'Service type is required').max(100),
+});

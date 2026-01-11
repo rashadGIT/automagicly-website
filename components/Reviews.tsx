@@ -12,6 +12,16 @@ interface StoredReview extends ReviewFormData {
   timestamp: number;
 }
 
+// Fisher-Yates shuffle algorithm for unbiased randomization
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export default function Reviews() {
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +53,10 @@ export default function Reviews() {
       try {
         setSubmittedReviews(JSON.parse(stored));
       } catch (e) {
-        console.error('Error loading reviews:', e);
+        // Log error and clear corrupted data
+        console.error('Failed to parse stored reviews, clearing corrupted data:', e);
+        localStorage.removeItem('automagicly_submitted_reviews');
+        // Note: User will see empty state, which is better than showing corrupted data
       }
     }
 
@@ -74,7 +87,7 @@ export default function Reviews() {
   const loadApprovedReviews = async () => {
     setLoadingApproved(true);
     try {
-      const response = await fetch('/api/reviews-simple');
+      const response = await fetch('/api/reviews?status=approved');
       const data = await response.json();
       // Filter for approved reviews with rating > 3 (4 and 5 stars only)
       const approved = (data.reviews || []).filter((r: ReviewFormData) =>
@@ -86,14 +99,16 @@ export default function Reviews() {
       const featured = approved.filter((r: ReviewFormData) => r.featured === true);
       const nonFeatured = approved.filter((r: ReviewFormData) => r.featured !== true);
 
-      // Randomize non-featured reviews
-      const randomizedNonFeatured = [...nonFeatured].sort(() => 0.5 - Math.random());
+      // Randomize non-featured reviews using Fisher-Yates shuffle
+      const randomizedNonFeatured = fisherYatesShuffle([...nonFeatured]);
 
       // Show featured first, then random non-featured, limit to 3 total
       const combined = [...featured, ...randomizedNonFeatured].slice(0, 3);
       setDisplayReviews(combined);
     } catch (error) {
-      console.error('Error loading approved reviews:', error);
+      // On error, display empty state - user will see "no reviews" message
+      setApprovedReviews([]);
+      setDisplayReviews([]);
     } finally {
       setLoadingApproved(false);
     }
@@ -219,13 +234,13 @@ export default function Reviews() {
                 const isLongReview = reviewLength > 1000; // Use drawer
                 const isMediumReview = reviewLength > 300 && reviewLength <= 1000; // Inline expand
 
-                // Truncate at last complete word before 300 chars, keeping the space
+                // Truncate at last complete word before 300 chars without trailing space
                 let displayText = reviewText;
                 if (needsTruncation && !isExpanded) {
                   const lastSpaceIndex = reviewText.lastIndexOf(' ', 300);
                   displayText = lastSpaceIndex > 0
-                    ? reviewText.substring(0, lastSpaceIndex + 1)
-                    : reviewText.substring(0, 300);
+                    ? reviewText.substring(0, lastSpaceIndex).trim()
+                    : reviewText.substring(0, 297).trim(); // Leave room for ellipsis
                 }
 
                 const handleExpand = () => {
@@ -418,7 +433,7 @@ export default function Reviews() {
                     <textarea
                       required
                       rows={5}
-                      maxLength={400}
+                      maxLength={2000}
                       value={formData.reviewText}
                       onChange={(e) => {
                         setFormData(prev => ({ ...prev, reviewText: e.target.value }));
@@ -432,10 +447,10 @@ export default function Reviews() {
                     />
                     <div className="flex justify-between items-center mt-1">
                       <div className="text-xs text-gray-500">
-                        {formData.reviewText.length}/400 characters
-                        {formData.reviewText.length >= 100 && formData.reviewText.length <= 350 && ' - great length!'}
+                        {formData.reviewText.length}/2000 characters
+                        {formData.reviewText.length >= 100 && formData.reviewText.length <= 500 && ' - great length!'}
                         {formData.reviewText.length > 0 && formData.reviewText.length < 100 && ' - consider adding more detail'}
-                        {formData.reviewText.length > 350 && formData.reviewText.length < 400 && ' - getting close to limit'}
+                        {formData.reviewText.length > 1800 && ' - getting close to limit'}
                       </div>
                       {isAIAssisted && (
                         <div className="flex items-center gap-1 text-xs text-purple-600">

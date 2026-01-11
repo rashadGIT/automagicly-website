@@ -2,20 +2,17 @@
 
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import DOMPurify from 'isomorphic-dompurify';
+import { NextRequest } from 'next/server';
+import { sanitizeHtml as sanitize } from './sanitize';
+import { Filter } from 'bad-words';
+import { logger } from './logger';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Sanitize HTML to prevent XSS attacks
-export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: [], // No HTML tags allowed - plain text only
-    ALLOWED_ATTR: [],
-    KEEP_CONTENT: true
-  });
-}
+// Re-export sanitization function
+export const sanitizeHtml = sanitize;
 
 // Generate a stable session ID for chat
 export function getSessionId(): string {
@@ -30,11 +27,11 @@ export function getSessionId(): string {
   return sessionId;
 }
 
-// Basic profanity filter (simple implementation)
-const profanityList = ['spam', 'fuck', 'shit', 'damn', 'bitch', 'ass'];
+// Profanity filter using bad-words library
+const profanityFilter = new Filter();
+
 export function containsProfanity(text: string): boolean {
-  const lowerText = text.toLowerCase();
-  return profanityList.some(word => lowerText.includes(word));
+  return profanityFilter.isProfane(text);
 }
 
 // Check if message is asking for pricing/proposals
@@ -99,7 +96,6 @@ export async function sendToN8N(webhookUrl: string | undefined, data: any): Prom
 
     return response.ok;
   } catch (error) {
-    console.error('Error sending to n8n:', error);
     return false;
   }
 }
@@ -116,20 +112,64 @@ export async function fetchBusyDates(): Promise<Date[]> {
     const response = await fetch(apiUrl);
 
     if (!response.ok) {
-      console.error('Failed response when fetching busy dates:', response.status, response.statusText);
+      logger.error('Calendar API request failed', {
+        status: response.status,
+        statusText: response.statusText
+      });
+      logger.warn('Returning empty busy dates - all dates will appear available');
       return [];
     }
 
     const data = await response.json();
 
+    // Check for API error response
     if (data.error) {
-      console.error('API returned error:', data.error);
+      logger.error('Calendar API returned error', { error: data.error });
+      logger.warn('Returning empty busy dates - all dates will appear available');
+      return [];
     }
 
     // Convert date strings to Date objects
     return (data.busyDates || []).map((dateStr: string) => new Date(dateStr + 'T00:00:00'));
   } catch (error) {
-    console.error('Error fetching busy dates:', error);
+    logger.error('Failed to fetch calendar busy dates', {}, error as Error);
+    logger.warn('Returning empty busy dates - all dates will appear available');
     return [];
   }
+}
+
+// Check if user is admin
+export function isAdmin(session: any): boolean {
+  return session?.user?.role === 'admin';
+}
+
+// CSRF Protection: Verify Origin/Referer headers
+export function verifyCsrfToken(request: NextRequest): boolean {
+  // Get the origin from headers
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host');
+
+  // For same-origin requests, we expect origin or referer to match the host
+  const allowedOrigins = [
+    `http://${host}`,
+    `https://${host}`,
+    process.env.NEXTAUTH_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+  ].filter(Boolean);
+
+  // Check origin header first (more reliable)
+  // Must be exact match to prevent subdomain attacks (e.g., example.com.attacker.com)
+  if (origin) {
+    return allowedOrigins.some(allowed => origin === allowed);
+  }
+
+  // Fall back to referer if origin is not present
+  // Referer can use startsWith since it includes the full URL path
+  if (referer) {
+    return allowedOrigins.some(allowed => referer.startsWith(allowed as string));
+  }
+
+  // If neither header is present, reject (likely CSRF attack)
+  return false;
 }

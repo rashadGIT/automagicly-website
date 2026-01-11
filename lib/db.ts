@@ -5,11 +5,16 @@ const TABLE_NAME = 'automagicly-reviews';
 const GSI_NAME = 'status-created_at-index';
 
 function getClient() {
+  // Validate required environment variables
+  if (!process.env.DB_ACCESS_KEY_ID || !process.env.DB_SECRET_ACCESS_KEY) {
+    throw new Error('Missing required DynamoDB credentials (DB_ACCESS_KEY_ID or DB_SECRET_ACCESS_KEY)');
+  }
+
   return new DynamoDBClient({
     region: process.env.REGION || 'us-east-1',
     credentials: {
-      accessKeyId: process.env.DB_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.DB_ACCESS_KEY_ID,
+      secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
     }
   });
 }
@@ -76,7 +81,6 @@ export async function getReviews(status?: string): Promise<Review[]> {
       return reviews;
     }
   } catch (error) {
-    console.error('Error getting reviews:', error);
     throw error;
   }
 }
@@ -103,7 +107,6 @@ export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'u
     await client.send(command);
     return newReview;
   } catch (error) {
-    console.error('Error creating review:', error);
     throw error;
   }
 }
@@ -153,7 +156,6 @@ export async function updateReview(
     const response = await client.send(command);
     return response.Attributes ? unmarshall(response.Attributes) as Review : null;
   } catch (error) {
-    console.error('Error updating review:', error);
     throw error;
   }
 }
@@ -170,7 +172,6 @@ export async function deleteReview(id: string): Promise<boolean> {
     await client.send(command);
     return true;
   } catch (error) {
-    console.error('Error deleting review:', error);
     throw error;
   }
 }

@@ -1,14 +1,50 @@
 import { NextResponse } from 'next/server';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { isAdmin } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
+  // Require authentication and admin role for this admin-only endpoint
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({
+      success: false,
+      error: 'Unauthorized - authentication required'
+    }, { status: 401 });
+  }
+
+  // Check for admin role
+  if (!isAdmin(session)) {
+    logger.security('Non-admin attempted to access reviews-simple endpoint', {
+      path: '/api/reviews-simple',
+      email: session.user?.email,
+    });
+    return NextResponse.json({
+      success: false,
+      error: 'Forbidden - admin access required'
+    }, { status: 403 });
+  }
   try {
+    // Check required environment variables
+    if (!process.env.DB_ACCESS_KEY_ID || !process.env.DB_SECRET_ACCESS_KEY) {
+      logger.error('Missing DynamoDB credentials', {
+        path: '/api/reviews-simple',
+        method: 'GET'
+      });
+      return NextResponse.json({
+        success: false,
+        error: 'Database configuration error'
+      }, { status: 500 });
+    }
+
     const client = new DynamoDBClient({
       region: process.env.REGION || 'us-east-1',
       credentials: {
-        accessKeyId: process.env.DB_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.DB_ACCESS_KEY_ID,
+        secretAccessKey: process.env.DB_SECRET_ACCESS_KEY,
       }
     });
 
@@ -34,7 +70,10 @@ export async function GET() {
       }
     });
   } catch (error: any) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Failed to fetch reviews', {
+      path: '/api/reviews-simple',
+      method: 'GET',
+    }, error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch reviews'

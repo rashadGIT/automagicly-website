@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { bookingQuerySchema } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 // Google Calendar API configuration
 const GOOGLE_CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
@@ -29,9 +30,16 @@ export async function GET(request: NextRequest) {
     const endDate = end || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const tz = timezone || 'UTC';
 
-    // If Google Calendar credentials are not configured, return empty array
+    // Validate Google credentials are properly configured
     if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
-      return NextResponse.json({ busyDates: [] });
+      logger.error('Missing Google Calendar credentials', {
+        path: '/api/calendar/availability',
+        method: 'GET'
+      });
+      return NextResponse.json({
+        busyDates: [],
+        error: 'Calendar service not configured'
+      }, { status: 500 });
     }
 
     // Initialize Google Calendar API with service account
@@ -75,12 +83,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ busyDates });
 
-  } catch (error) {
-    console.error('❌ Calendar availability API error:', error);
-    // Return empty array on error so booking still works
+  } catch (error: any) {
+    logger.error('Failed to fetch calendar availability', {
+      path: '/api/calendar/availability',
+      method: 'GET',
+    }, error);
+    // Return error status so frontend can handle gracefully
     return NextResponse.json(
       { busyDates: [], error: 'Failed to fetch calendar availability' },
-      { status: 200 } // Still return 200 so booking flow isn't broken
+      { status: 500 }
     );
   }
 }
