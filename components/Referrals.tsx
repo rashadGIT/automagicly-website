@@ -34,7 +34,10 @@ export default function Referrals() {
       try {
         setSubmittedReferrals(JSON.parse(stored));
       } catch (e) {
-        console.error('Error loading referrals:', e);
+        // Log error and clear corrupted data
+        console.error('Failed to parse stored referrals, clearing corrupted data:', e);
+        localStorage.removeItem('automagicly_submitted_referrals');
+        // Note: User will see empty state, which is better than showing corrupted data
       }
     }
   }, []);

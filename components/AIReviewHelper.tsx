@@ -49,7 +49,10 @@ export default function AIReviewHelper({
           setAnswers(parsed.answers || answers);
           setSelectedTone(parsed.tone || 'professional');
         } catch (e) {
-          console.error('Error loading saved answers:', e);
+          // Log error and clear corrupted data
+          console.error('Failed to parse AI helper saved answers, clearing corrupted data:', e);
+          localStorage.removeItem('ai_review_helper_answers');
+          // Note: User will see default state, which is better than showing corrupted data
         }
       }
     }
@@ -130,7 +133,6 @@ export default function AIReviewHelper({
       setHasGenerated(true);
       setRegenerationsLeft(prev => prev - 1);
     } catch (err) {
-      console.error('Error generating review:', err);
       setError('Failed to generate review. Please try again.');
     } finally {
       setIsGenerating(false);
@@ -254,7 +256,9 @@ export default function AIReviewHelper({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., We were spending 10 hours/week on manual data entry"
                 rows={3}
+                maxLength={500}
               />
+              <p className="text-xs text-gray-500 mt-1">{answers.problem.length}/500 characters</p>
             </div>
 
             <div>
@@ -267,7 +271,9 @@ export default function AIReviewHelper({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., They automated our invoice processing and were very responsive"
                 rows={3}
+                maxLength={500}
               />
+              <p className="text-xs text-gray-500 mt-1">{answers.experience.length}/500 characters</p>
             </div>
 
             <div>
@@ -280,7 +286,9 @@ export default function AIReviewHelper({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., We now save 8 hours per week and reduced errors by 90%"
                 rows={3}
+                maxLength={500}
               />
+              <p className="text-xs text-gray-500 mt-1">{answers.results.length}/500 characters</p>
             </div>
           </div>
 

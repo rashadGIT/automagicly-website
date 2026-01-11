@@ -59,6 +59,9 @@ export default function ChatWidget() {
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      // Log error for debugging
+      console.error('Chat request failed:', error);
+
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: 'Sorry, I am having trouble connecting. Please try again later.',

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { sanitizeHtml } from '@/lib/utils';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface Review {
   id: string;
@@ -17,29 +20,33 @@ interface Review {
 }
 
 export default function AdminReviews() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  const { data: session, status } = useSession();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [loading, setLoading] = useState(false);
 
-  // Simple password protection (in production, use proper authentication)
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
-    if (password === adminPassword) {
-      setIsAuthenticated(true);
+  useEffect(() => {
+    if (status === 'authenticated') {
       loadReviews();
-    } else {
-      alert('Invalid password');
     }
-  };
+  }, [status, filter]);
 
   const loadReviews = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/reviews-simple');
+
+      if (!response.ok) {
+        throw new Error(`Failed to load reviews: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
+
+      // Check for API error
+      if (!data.success && data.error) {
+        throw new Error(data.error);
+      }
+
       // Filter client-side
       let filtered = data.reviews || [];
       if (filter !== 'all') {
@@ -47,13 +54,18 @@ export default function AdminReviews() {
       }
       setReviews(filtered);
     } catch (error) {
+      // Log error and show toast notification
       console.error('Error loading reviews:', error);
+      toast.error('Failed to load reviews. Please refresh the page.');
+      // Set empty array so UI shows "no reviews" rather than stale data
+      setReviews([]);
     } finally {
       setLoading(false);
     }
   };
 
   const updateReviewStatus = async (id: string, status: 'approved' | 'rejected') => {
+    const loadingToast = toast.loading(`${status === 'approved' ? 'Approving' : 'Rejecting'} review...`);
     try {
       const response = await fetch('/api/reviews', {
         method: 'PATCH',
@@ -62,16 +74,20 @@ export default function AdminReviews() {
       });
 
       if (response.ok) {
-        alert(`Review ${status}!`);
+        toast.success(`Review ${status}!`, { id: loadingToast });
         loadReviews();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to update review', { id: loadingToast });
       }
     } catch (error) {
-      console.error('Error updating review:', error);
-      alert('Failed to update review');
+      toast.error('Failed to update review', { id: loadingToast });
     }
   };
 
   const toggleFeatured = async (id: string, currentFeatured: boolean) => {
+    const action = currentFeatured ? 'Unfeaturing' : 'Featuring';
+    const loadingToast = toast.loading(`${action} review...`);
     try {
       const response = await fetch('/api/reviews', {
         method: 'PATCH',
@@ -80,29 +96,35 @@ export default function AdminReviews() {
       });
 
       if (response.ok) {
+        toast.success(`Review ${currentFeatured ? 'unfeatured' : 'featured'}!`, { id: loadingToast });
         loadReviews();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to update featured status', { id: loadingToast });
       }
     } catch (error) {
-      console.error('Error toggling featured:', error);
-      alert('Failed to update featured status');
+      toast.error('Failed to update featured status', { id: loadingToast });
     }
   };
 
   const deleteReview = async (id: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;
 
+    const loadingToast = toast.loading('Deleting review...');
     try {
       const response = await fetch(`/api/reviews?id=${id}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
-        alert('Review deleted!');
+        toast.success('Review deleted!', { id: loadingToast });
         loadReviews();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to delete review', { id: loadingToast });
       }
     } catch (error) {
-      console.error('Error deleting review:', error);
-      alert('Failed to delete review');
+      toast.error('Failed to delete review', { id: loadingToast });
     }
   };
 
@@ -121,42 +143,13 @@ export default function AdminReviews() {
     );
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadReviews();
-    }
-  }, [filter, isAuthenticated]);
-
-  // Login screen
-  if (!isAuthenticated) {
+  // Show loading state while checking authentication
+  if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Login</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter admin password"
-                autoFocus
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
-            >
-              Login
-            </button>
-            <p className="text-xs text-gray-500 mt-4">
-              Default password: admin123 (change this in production!)
-            </p>
-          </form>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -165,16 +158,22 @@ export default function AdminReviews() {
   // Admin dashboard
   return (
     <div className="min-h-screen bg-gray-100 p-8">
+      <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Review Management</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Review Management</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Signed in as {session?.user?.email}
+              </p>
+            </div>
             <button
-              onClick={() => setIsAuthenticated(false)}
-              className="text-sm text-gray-600 hover:text-gray-800"
+              onClick={() => signOut({ callbackUrl: '/admin/login' })}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition"
             >
-              Logout
+              Sign Out
             </button>
           </div>
         </div>
@@ -239,7 +238,7 @@ export default function AdminReviews() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-bold text-gray-900">
-                        {review.name || 'Anonymous'}
+                        {sanitizeHtml(review.name || 'Anonymous')}
                       </h3>
                       <span
                         className={`text-xs px-3 py-1 rounded-full font-semibold ${
@@ -272,13 +271,13 @@ export default function AdminReviews() {
                       )}
                     </div>
                     {review.email && (
-                      <p className="text-sm text-gray-600">📧 {review.email}</p>
+                      <p className="text-sm text-gray-600">📧 {sanitizeHtml(review.email)}</p>
                     )}
                     {review.company && (
-                      <p className="text-sm text-gray-600">🏢 {review.company}</p>
+                      <p className="text-sm text-gray-600">🏢 {sanitizeHtml(review.company)}</p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
-                      Service: {review.serviceType} • Submitted: {new Date(review.submittedAt).toLocaleDateString()}
+                      Service: {sanitizeHtml(review.serviceType)} • Submitted: {new Date(review.submittedAt).toLocaleDateString()}
                     </p>
                   </div>
                   {renderStars(review.rating)}
@@ -286,7 +285,7 @@ export default function AdminReviews() {
 
                 {/* Review Text */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <p className="text-gray-800 whitespace-pre-wrap">{review.reviewText}</p>
+                  <p className="text-gray-800 whitespace-pre-wrap">{sanitizeHtml(review.reviewText)}</p>
                 </div>
 
                 {/* Actions */}

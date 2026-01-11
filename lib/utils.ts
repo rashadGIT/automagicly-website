@@ -2,10 +2,17 @@
 
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { NextRequest } from 'next/server';
+import { sanitizeHtml as sanitize } from './sanitize';
+import { Filter } from 'bad-words';
+import { logger } from './logger';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Re-export sanitization function
+export const sanitizeHtml = sanitize;
 
 // Generate a stable session ID for chat
 export function getSessionId(): string {
@@ -13,17 +20,18 @@ export function getSessionId(): string {
 
   let sessionId = localStorage.getItem('automagicly_session_id');
   if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Use crypto.randomUUID() for cryptographically secure random IDs
+    sessionId = `session_${crypto.randomUUID()}`;
     localStorage.setItem('automagicly_session_id', sessionId);
   }
   return sessionId;
 }
 
-// Basic profanity filter (simple implementation)
-const profanityList = ['spam', 'fuck', 'shit', 'damn', 'bitch', 'ass'];
+// Profanity filter using bad-words library
+const profanityFilter = new Filter();
+
 export function containsProfanity(text: string): boolean {
-  const lowerText = text.toLowerCase();
-  return profanityList.some(word => lowerText.includes(word));
+  return profanityFilter.isProfane(text);
 }
 
 // Check if message is asking for pricing/proposals
@@ -70,7 +78,6 @@ export function scrollToElement(elementId: string) {
 // Send data to n8n webhook
 export async function sendToN8N(webhookUrl: string | undefined, data: any): Promise<boolean> {
   if (!webhookUrl) {
-    console.log('No webhook URL configured, skipping:', data);
     return true; // Success in demo mode
   }
 
@@ -89,52 +96,80 @@ export async function sendToN8N(webhookUrl: string | undefined, data: any): Prom
 
     return response.ok;
   } catch (error) {
-    console.error('Error sending to n8n:', error);
     return false;
   }
 }
 
 // Fetch busy dates from calendar
 export async function fetchBusyDates(): Promise<Date[]> {
-  console.log("🔍 CLIENT: Fetching busy dates from calendar");
   try {
     const startDate = new Date().toISOString().split('T')[0];
     const endDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 60 days ahead
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    console.log("🔍 CLIENT: Request params -", { startDate, endDate, timezone });
-
     const apiUrl = `/api/calendar/availability?start=${startDate}&end=${endDate}&timezone=${timezone}`;
-    console.log("🔍 CLIENT: Calling API:", apiUrl);
 
     const response = await fetch(apiUrl);
 
-    console.log("🔍 CLIENT: API response status:", response.status, response.statusText);
-    
-    console.log("dfuidewfiewdfe",response)
-    
     if (!response.ok) {
-      console.error('❌ CLIENT: Failed response when fetching busy dates:', response.status, response.statusText);
+      logger.error('Calendar API request failed', {
+        status: response.status,
+        statusText: response.statusText
+      });
+      logger.warn('Returning empty busy dates - all dates will appear available');
       return [];
     }
 
     const data = await response.json();
-    console.log("🔍 CLIENT: API response data:", data);
 
+    // Check for API error response
     if (data.error) {
-      console.error('❌ CLIENT: API returned error:', data.error);
-    }
-
-    if (data.busyDates && data.busyDates.length > 0) {
-      console.log(`✅ CLIENT: Found ${data.busyDates.length} busy dates:`, data.busyDates);
-    } else {
-      console.log("⚠️ CLIENT: No busy dates returned from API");
+      logger.error('Calendar API returned error', { error: data.error });
+      logger.warn('Returning empty busy dates - all dates will appear available');
+      return [];
     }
 
     // Convert date strings to Date objects
     return (data.busyDates || []).map((dateStr: string) => new Date(dateStr + 'T00:00:00'));
   } catch (error) {
-    console.error('❌ CLIENT: Error fetching busy dates:', error);
+    logger.error('Failed to fetch calendar busy dates', {}, error as Error);
+    logger.warn('Returning empty busy dates - all dates will appear available');
     return [];
   }
+}
+
+// Check if user is admin
+export function isAdmin(session: any): boolean {
+  return session?.user?.role === 'admin';
+}
+
+// CSRF Protection: Verify Origin/Referer headers
+export function verifyCsrfToken(request: NextRequest): boolean {
+  // Get the origin from headers
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host');
+
+  // For same-origin requests, we expect origin or referer to match the host
+  const allowedOrigins = [
+    `http://${host}`,
+    `https://${host}`,
+    process.env.NEXTAUTH_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+  ].filter(Boolean);
+
+  // Check origin header first (more reliable)
+  // Must be exact match to prevent subdomain attacks (e.g., example.com.attacker.com)
+  if (origin) {
+    return allowedOrigins.some(allowed => origin === allowed);
+  }
+
+  // Fall back to referer if origin is not present
+  // Referer can use startsWith since it includes the full URL path
+  if (referer) {
+    return allowedOrigins.some(allowed => referer.startsWith(allowed as string));
+  }
+
+  // If neither header is present, reject (likely CSRF attack)
+  return false;
 }

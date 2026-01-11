@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { ReviewFormData } from '@/lib/types';
-import { sendToN8N } from '@/lib/utils';
+import { sendToN8N, sanitizeHtml } from '@/lib/utils';
 import AIReviewHelper from './AIReviewHelper';
 
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL;
@@ -10,6 +10,16 @@ const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL;
 interface StoredReview extends ReviewFormData {
   id: string;
   timestamp: number;
+}
+
+// Fisher-Yates shuffle algorithm for unbiased randomization
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 export default function Reviews() {
@@ -43,7 +53,10 @@ export default function Reviews() {
       try {
         setSubmittedReviews(JSON.parse(stored));
       } catch (e) {
-        console.error('Error loading reviews:', e);
+        // Log error and clear corrupted data
+        console.error('Failed to parse stored reviews, clearing corrupted data:', e);
+        localStorage.removeItem('automagicly_submitted_reviews');
+        // Note: User will see empty state, which is better than showing corrupted data
       }
     }
 
@@ -74,7 +87,7 @@ export default function Reviews() {
   const loadApprovedReviews = async () => {
     setLoadingApproved(true);
     try {
-      const response = await fetch('/api/reviews-simple');
+      const response = await fetch('/api/reviews?status=approved');
       const data = await response.json();
       // Filter for approved reviews with rating > 3 (4 and 5 stars only)
       const approved = (data.reviews || []).filter((r: ReviewFormData) =>
@@ -82,24 +95,20 @@ export default function Reviews() {
       );
       setApprovedReviews(approved);
 
-      console.log('All approved reviews:', approved.map((r: ReviewFormData) => ({ name: r.name, featured: r.featured })));
-
       // Separate featured and non-featured reviews
       const featured = approved.filter((r: ReviewFormData) => r.featured === true);
       const nonFeatured = approved.filter((r: ReviewFormData) => r.featured !== true);
 
-      console.log('Featured reviews:', featured.map((r: ReviewFormData) => r.name));
-      console.log('Non-featured reviews:', nonFeatured.map((r: ReviewFormData) => r.name));
-
-      // Randomize non-featured reviews
-      const randomizedNonFeatured = [...nonFeatured].sort(() => 0.5 - Math.random());
+      // Randomize non-featured reviews using Fisher-Yates shuffle
+      const randomizedNonFeatured = fisherYatesShuffle([...nonFeatured]);
 
       // Show featured first, then random non-featured, limit to 3 total
       const combined = [...featured, ...randomizedNonFeatured].slice(0, 3);
-      console.log('Final display order:', combined.map((r: ReviewFormData) => r.name));
       setDisplayReviews(combined);
     } catch (error) {
-      console.error('Error loading approved reviews:', error);
+      // On error, display empty state - user will see "no reviews" message
+      setApprovedReviews([]);
+      setDisplayReviews([]);
     } finally {
       setLoadingApproved(false);
     }
@@ -225,13 +234,13 @@ export default function Reviews() {
                 const isLongReview = reviewLength > 1000; // Use drawer
                 const isMediumReview = reviewLength > 300 && reviewLength <= 1000; // Inline expand
 
-                // Truncate at last complete word before 300 chars, keeping the space
+                // Truncate at last complete word before 300 chars without trailing space
                 let displayText = reviewText;
                 if (needsTruncation && !isExpanded) {
                   const lastSpaceIndex = reviewText.lastIndexOf(' ', 300);
                   displayText = lastSpaceIndex > 0
-                    ? reviewText.substring(0, lastSpaceIndex + 1)
-                    : reviewText.substring(0, 300);
+                    ? reviewText.substring(0, lastSpaceIndex).trim()
+                    : reviewText.substring(0, 297).trim(); // Leave room for ellipsis
                 }
 
                 const handleExpand = () => {
@@ -262,7 +271,7 @@ export default function Reviews() {
 
                     <div className={isExpanded ? '' : 'flex-1 overflow-hidden'}>
                       <p className="text-gray-700 mb-4 italic transition-all duration-300">
-                        "{displayText}{needsTruncation && !isExpanded && '...'}"
+                        "{sanitizeHtml(displayText)}{needsTruncation && !isExpanded && '...'}"
                       </p>
 
                       {needsTruncation && (
@@ -294,11 +303,11 @@ export default function Reviews() {
                     </div>
 
                     <div className="border-t pt-4 mt-auto">
-                      <p className="font-semibold text-gray-900">{review.name || 'Anonymous'}</p>
+                      <p className="font-semibold text-gray-900">{sanitizeHtml(review.name || 'Anonymous')}</p>
                       {review.company && review.company !== 'Anonymous Company' && (
-                        <p className="text-sm text-gray-600">{review.company}</p>
+                        <p className="text-sm text-gray-600">{sanitizeHtml(review.company)}</p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">{review.service_type || review.serviceType}</p>
+                      <p className="text-xs text-gray-500 mt-1">{sanitizeHtml(review.service_type || review.serviceType)}</p>
                     </div>
                   </div>
                 );
@@ -424,7 +433,7 @@ export default function Reviews() {
                     <textarea
                       required
                       rows={5}
-                      maxLength={400}
+                      maxLength={2000}
                       value={formData.reviewText}
                       onChange={(e) => {
                         setFormData(prev => ({ ...prev, reviewText: e.target.value }));
@@ -438,10 +447,10 @@ export default function Reviews() {
                     />
                     <div className="flex justify-between items-center mt-1">
                       <div className="text-xs text-gray-500">
-                        {formData.reviewText.length}/400 characters
-                        {formData.reviewText.length >= 100 && formData.reviewText.length <= 350 && ' - great length!'}
+                        {formData.reviewText.length}/2000 characters
+                        {formData.reviewText.length >= 100 && formData.reviewText.length <= 500 && ' - great length!'}
                         {formData.reviewText.length > 0 && formData.reviewText.length < 100 && ' - consider adding more detail'}
-                        {formData.reviewText.length > 350 && formData.reviewText.length < 400 && ' - getting close to limit'}
+                        {formData.reviewText.length > 1800 && ' - getting close to limit'}
                       </div>
                       {isAIAssisted && (
                         <div className="flex items-center gap-1 text-xs text-purple-600">
@@ -611,18 +620,18 @@ export default function Reviews() {
                   </div>
 
                   <blockquote className="text-gray-700 text-lg italic leading-relaxed mb-6">
-                    "{drawerReview.review_text || drawerReview.reviewText}"
+                    "{sanitizeHtml(drawerReview.review_text || drawerReview.reviewText)}"
                   </blockquote>
 
                   <div className="border-t pt-6">
                     <p className="font-semibold text-gray-900 text-lg">
-                      {drawerReview.name || 'Anonymous'}
+                      {sanitizeHtml(drawerReview.name || 'Anonymous')}
                     </p>
                     {drawerReview.company && drawerReview.company !== 'Anonymous Company' && (
-                      <p className="text-gray-600 mt-2">{drawerReview.company}</p>
+                      <p className="text-gray-600 mt-2">{sanitizeHtml(drawerReview.company)}</p>
                     )}
                     <p className="text-sm text-gray-500 mt-2">
-                      {drawerReview.service_type || drawerReview.serviceType}
+                      {sanitizeHtml(drawerReview.service_type || drawerReview.serviceType)}
                     </p>
                   </div>
                 </div>

@@ -1,28 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isPricingRequest, containsProfanity } from '@/lib/utils';
+import { isPricingRequest, containsProfanity, verifyCsrfToken, sanitizeHtml } from '@/lib/utils';
+import { chatMessageSchema } from '@/lib/validation';
+import { logger } from '@/lib/logger';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const N8N_CHAT_WEBHOOK_URL = process.env.N8N_CHAT_WEBHOOK_URL;
-
-// Simple in-memory rate limiting (for production, use Redis or similar)
-const rateLimitMap = new Map<string, number[]>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 10; // 10 messages per minute
-
-function checkRateLimit(sessionId: string): boolean {
-  const now = Date.now();
-  const timestamps = rateLimitMap.get(sessionId) || [];
-
-  // Filter out timestamps outside the window
-  const recentTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
-
-  if (recentTimestamps.length >= RATE_LIMIT_MAX) {
-    return false; // Rate limit exceeded
-  }
-
-  recentTimestamps.push(now);
-  rateLimitMap.set(sessionId, recentTimestamps);
-  return true;
-}
 
 function getPricingRefusalMessage(): string {
   return "I can't provide pricing or custom quotes through chat. Each automation is different, and pricing depends on your specific needs and workflow complexity.\n\nTo get accurate information, I recommend scheduling a Free AI Audit where we'll:\n\n• Review your specific workflows\n• Identify automation opportunities\n• Discuss what's involved\n• Provide a tailored recommendation\n\nWould you like to book your audit?";
@@ -33,31 +15,85 @@ function getDefaultFallbackResponse(): string {
 }
 
 export async function POST(request: NextRequest) {
+  // CSRF Protection
+  if (!verifyCsrfToken(request)) {
+    logger.security('CSRF validation failed', {
+      path: '/api/chat',
+      method: request.method,
+      origin: request.headers.get('origin'),
+      referer: request.headers.get('referer'),
+    });
+    return NextResponse.json(
+      {
+        reply: 'Invalid request origin',
+        blocked: true,
+        reason: 'csrf_validation_failed'
+      },
+      { status: 403 }
+    );
+  }
+
+  // Validate Content-Type
+  const contentType = request.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    return NextResponse.json(
+      {
+        reply: 'Content-Type must be application/json',
+        blocked: true,
+        reason: 'invalid_content_type'
+      },
+      { status: 400 }
+    );
+  }
+
   try {
     const body = await request.json();
-    const { message, sessionId } = body;
 
-    if (!message || typeof message !== 'string') {
+    // Validate input with zod
+    const validation = chatMessageSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { reply: 'Please provide a valid message.' },
+        {
+          reply: 'Invalid request data.',
+          details: validation.error.issues
+        },
         { status: 400 }
       );
     }
 
-    if (!sessionId) {
-      return NextResponse.json(
-        { reply: 'Session ID required.' },
-        { status: 400 }
-      );
-    }
+    const { message, sessionId } = validation.data;
 
-    // Rate limiting
-    if (!checkRateLimit(sessionId)) {
+    // Get client IP for additional rate limiting
+    const clientIp = getClientIp(request);
+
+    // Check both session-based and IP-based rate limits (DynamoDB-based)
+    const sessionAllowed = await checkRateLimit(sessionId);
+    if (!sessionAllowed) {
+      logger.warn('Session rate limit exceeded', {
+        path: '/api/chat',
+        sessionId,
+      });
       return NextResponse.json(
         {
           reply: 'You\'re sending messages too quickly. Please wait a moment and try again.',
           blocked: true,
           reason: 'rate_limit'
+        },
+        { status: 429 }
+      );
+    }
+
+    const ipAllowed = await checkRateLimit(clientIp, true);
+    if (!ipAllowed) {
+      logger.warn('IP rate limit exceeded', {
+        path: '/api/chat',
+        clientIp,
+      });
+      return NextResponse.json(
+        {
+          reply: 'Too many requests from your network. Please wait a moment and try again.',
+          blocked: true,
+          reason: 'ip_rate_limit'
         },
         { status: 429 }
       );
@@ -104,13 +140,28 @@ export async function POST(request: NextRequest) {
 
         const n8nData = await n8nResponse.json();
 
+        // Validate n8n response structure
+        if (typeof n8nData !== 'object' || n8nData === null) {
+          throw new Error('Invalid n8n response format');
+        }
+
         // Handle RAG chatbot response format
         if (n8nData.success && n8nData.message) {
+          // Sanitize message content to prevent XSS
+          const sanitizedMessage = typeof n8nData.message === 'string'
+            ? sanitizeHtml(n8nData.message)
+            : getDefaultFallbackResponse();
+
+          // Validate sources array
+          const validatedSources = Array.isArray(n8nData.sources)
+            ? n8nData.sources.slice(0, 10) // Limit to 10 sources max
+            : [];
+
           return NextResponse.json({
-            reply: n8nData.message,
-            sources: n8nData.sources || [],
-            conversationId: n8nData.conversationId,
-            timestamp: n8nData.timestamp
+            reply: sanitizedMessage,
+            sources: validatedSources,
+            conversationId: typeof n8nData.conversationId === 'string' ? n8nData.conversationId : undefined,
+            timestamp: typeof n8nData.timestamp === 'string' ? n8nData.timestamp : undefined
           });
         }
 
@@ -130,7 +181,10 @@ export async function POST(request: NextRequest) {
           reply: n8nData.reply || n8nData.message || getDefaultFallbackResponse()
         });
       } catch (error) {
-        console.error('Error calling n8n webhook:', error);
+        logger.warn('N8N request failed, using fallback response', {
+          path: '/api/chat',
+          n8nUrl: N8N_CHAT_WEBHOOK_URL,
+        });
         // Fall through to default response
       }
     }
@@ -140,8 +194,11 @@ export async function POST(request: NextRequest) {
       reply: getDefaultFallbackResponse()
     });
 
-  } catch (error) {
-    console.error('Chat API error:', error);
+  } catch (error: any) {
+    logger.error('Chat request failed', {
+      path: '/api/chat',
+      method: 'POST',
+    }, error);
     return NextResponse.json(
       { reply: 'An error occurred. Please try again.' },
       { status: 500 }

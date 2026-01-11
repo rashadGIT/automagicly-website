@@ -14,7 +14,6 @@ export default function CalendarDiagnostic() {
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
         setLoading(false);
       });
   }, []);
