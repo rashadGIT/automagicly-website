@@ -41,9 +41,13 @@ export async function GET() {
       credentials: {
         accessKeyId: dbAccessKeyId,
         accessKeyIdLength: dbAccessKeyId.length,
+        secretKeyLength: dbSecretAccessKey.length,
       }
     });
   } catch (error: any) {
+    const dbAccessKeyId = process.env.DB_ACCESS_KEY_ID;
+    const dbSecretAccessKey = process.env.DB_SECRET_ACCESS_KEY;
+
     return NextResponse.json({
       success: false,
       error: 'DynamoDB connection failed',
@@ -51,6 +55,11 @@ export async function GET() {
       errorName: error.name,
       errorCode: error.code || 'UNKNOWN',
       stack: error.stack?.split('\n').slice(0, 3),
+      credentials: {
+        accessKeyId: dbAccessKeyId || 'MISSING',
+        accessKeyIdLength: dbAccessKeyId?.length || 0,
+        secretKeyLength: dbSecretAccessKey?.length || 0,
+      }
     }, { status: 500 });
   }
 }
