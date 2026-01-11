@@ -21,9 +21,18 @@ export function initRUM() {
     return rumInstance;
   }
 
+  // Only enable RUM in production or when explicitly enabled
+  const isProduction = process.env.NODE_ENV === 'production';
+  const forceEnable = process.env.NEXT_PUBLIC_ENABLE_RUM === 'true';
+
+  if (!isProduction && !forceEnable) {
+    console.log('ℹ️  CloudWatch RUM disabled in development (set NEXT_PUBLIC_ENABLE_RUM=true to enable)');
+    return null;
+  }
+
   try {
     const config: AwsRumConfig = {
-      sessionSampleRate: 1.0, // 100% sampling in dev, reduce in production
+      sessionSampleRate: isProduction ? 0.1 : 1.0, // 10% in prod, 100% in dev
       identityPoolId: 'us-east-1:126eeb24-53e8-4906-a994-38dda48ce9e9',
       endpoint: 'https://dataplane.rum.us-east-1.amazonaws.com',
       telemetries: ['errors', 'performance', 'http'],
@@ -46,7 +55,8 @@ export function initRUM() {
 
     return rumInstance;
   } catch (error) {
-    console.error('Failed to initialize CloudWatch RUM:', error);
+    console.error('⚠️  Failed to initialize CloudWatch RUM:', error);
+    // Don't throw - fail gracefully
     return null;
   }
 }
