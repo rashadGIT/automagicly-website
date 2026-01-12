@@ -26,9 +26,14 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const startDate = start || new Date().toISOString().split('T')[0];
-    const endDate = end || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const tz = timezone || 'UTC';
+    const tz = timezone || 'America/New_York';
+
+    // Get current date in the user's timezone (not UTC)
+    const nowInUserTz = new Date().toLocaleString('en-US', { timeZone: tz });
+    const userDate = new Date(nowInUserTz);
+
+    const startDate = start || userDate.toISOString().split('T')[0];
+    const endDate = end || new Date(userDate.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Validate Google credentials are properly configured
     if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
