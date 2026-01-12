@@ -78,8 +78,9 @@ export default function CustomBooking() {
   }, []);
 
   // Disable past dates and busy dates from calendar
+  // Use startOfDay to prevent timezone issues - allows booking starting from today
   const disabledDays = [
-    { before: addDays(new Date(), 1) },
+    { before: startOfDay(new Date()) },
     ...busyDates // Dates when you have calendar events
   ];
 
