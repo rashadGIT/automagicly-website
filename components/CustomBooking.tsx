@@ -55,6 +55,7 @@ export default function CustomBooking() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [busyDates, setBusyDates] = useState<Date[]>([]);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   const [formData, setFormData] = useState<BookingData>({
     name: '',
@@ -64,6 +65,11 @@ export default function CustomBooking() {
     time: '',
     notes: ''
   });
+
+  // Set isClient to true only after component mounts on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Fetch busy dates from calendar on component mount
   useEffect(() => {
@@ -78,10 +84,12 @@ export default function CustomBooking() {
   }, []);
 
   // Disable past dates and busy dates from calendar
-  // Use startOfDay to prevent timezone issues - allows booking starting from today
-  const disabledDays = [
-    { before: startOfDay(new Date()) },
+  // Only calculate on client to avoid UTC/timezone issues during SSR
+  const disabledDays = isClient ? [
+    { before: addDays(new Date(), 1) },
     ...busyDates // Dates when you have calendar events
+  ] : [
+    { before: new Date('2099-01-01') } // During SSR, disable far future
   ];
 
   const handleDateSelect = (date: Date | undefined) => {
