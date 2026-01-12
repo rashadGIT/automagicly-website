@@ -28,12 +28,22 @@ export async function GET(request: NextRequest) {
 
     const tz = timezone || 'America/New_York';
 
-    // Get current date in the user's timezone (not UTC)
-    const nowInUserTz = new Date().toLocaleString('en-US', { timeZone: tz });
-    const userDate = new Date(nowInUserTz);
+    // Get current date in the user's timezone by using toLocaleString with dateStyle
+    // This properly handles timezone conversion
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const todayInUserTz = formatter.format(new Date()); // Returns YYYY-MM-DD format
 
-    const startDate = start || userDate.toISOString().split('T')[0];
-    const endDate = end || new Date(userDate.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const startDate = start || todayInUserTz;
+
+    // Calculate end date (60 days from start in user's timezone)
+    const startDateObj = new Date(startDate + 'T00:00:00');
+    const endDateObj = new Date(startDateObj.getTime() + 60 * 24 * 60 * 60 * 1000);
+    const endDate = end || formatter.format(endDateObj);
 
     // Validate Google credentials are properly configured
     if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
