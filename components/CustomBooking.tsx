@@ -271,6 +271,7 @@ export default function CustomBooking() {
                 selected={selected}
                 onSelect={handleDateSelect}
                 disabled={disabledDays}
+                today={isClient ? new Date() : undefined}
                 modifiersClassNames={{
                   selected: 'bg-brand-500',
                 }}
