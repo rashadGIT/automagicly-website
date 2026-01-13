@@ -1,0 +1,39 @@
+meta {
+  name: 01 - Success Case
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "What services does AutoMagicly offer?",
+    "sessionId": "test-success-001",
+    "userEmail": "test@example.com"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has reply", function() {
+    expect(res.body).to.have.property('reply');
+  });
+  
+  test("Response has sessionId", function() {
+    expect(res.body).to.have.property('sessionId');
+    expect(res.body.sessionId).to.equal('test-success-001');
+  });
+}

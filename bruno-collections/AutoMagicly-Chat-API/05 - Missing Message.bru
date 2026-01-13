@@ -1,0 +1,33 @@
+meta {
+  name: 05 - Missing Message
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "test-nomsg-001"
+  }
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Response has error", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error).to.include('message');
+  });
+}

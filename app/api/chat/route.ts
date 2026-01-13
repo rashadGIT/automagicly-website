@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const N8N_CHAT_WEBHOOK_URL = process.env.N8N_CHAT_WEBHOOK_URL;
+const N8N_CHAT_API_KEY = process.env.N8N_CHAT_API_KEY;
 
 function getPricingRefusalMessage(): string {
   return "I can't provide pricing or custom quotes through chat. Each automation is different, and pricing depends on your specific needs and workflow complexity.\n\nTo get accurate information, I recommend scheduling a Free AI Audit where we'll:\n\n• Review your specific workflows\n• Identify automation opportunities\n• Discuss what's involved\n• Provide a tailored recommendation\n\nWould you like to book your audit?";
@@ -127,10 +128,11 @@ export async function POST(request: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-API-Key': N8N_CHAT_API_KEY || '',
           },
           body: JSON.stringify({
             message,
-            conversationId: sessionId
+            sessionId
           }),
         });
 
