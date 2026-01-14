@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { injectAxe, checkA11y } from 'axe-playwright'
+import AxeBuilder from '@axe-core/playwright'
 
 test.describe('Booking Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await injectAxe(page)
   })
 
   test('should display booking section', async ({ page }) => {
@@ -119,11 +118,9 @@ test.describe('Booking Flow', () => {
   test('should pass accessibility checks', async ({ page }) => {
     await page.waitForSelector('.rdp', { timeout: 10000 })
 
-    // Check accessibility
-    await checkA11y(page, null, {
-      detailedReport: true,
-      detailedReportOptions: { html: true },
-    })
+    // Check accessibility using AxeBuilder
+    const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
+    expect(accessibilityScanResults.violations).toEqual([])
   })
 
   test('should work on mobile viewport', async ({ page }) => {
