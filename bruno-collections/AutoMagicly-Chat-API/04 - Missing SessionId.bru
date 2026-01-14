@@ -1,0 +1,33 @@
+meta {
+  name: 04 - Missing SessionId
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "Hello, this has no session ID"
+  }
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Response has error", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error).to.include('sessionId');
+  });
+}

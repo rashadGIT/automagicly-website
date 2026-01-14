@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "AutoMagicly Chat API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
