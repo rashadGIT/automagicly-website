@@ -39,25 +39,29 @@ describe('Utils', () => {
     it('should generate and store new session ID if none exists', () => {
       const sessionId = getSessionId()
 
-      expect(sessionId).toMatch(/^session_\d+_[a-z0-9]+$/)
+      // New format uses crypto.randomUUID() which produces hyphenated UUIDs
+      expect(sessionId).toMatch(/^session_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
       expect(localStorage.getItem('automagicly_session_id')).toBe(sessionId)
     })
   })
 
   describe('containsProfanity', () => {
     it('should detect profanity in text', () => {
-      expect(containsProfanity('This is spam')).toBe(true)
+      // Test with actual profanity words that bad-words library detects
       expect(containsProfanity('What the fuck')).toBe(true)
+      expect(containsProfanity('This is shit')).toBe(true)
     })
 
     it('should return false for clean text', () => {
       expect(containsProfanity('This is a nice message')).toBe(false)
       expect(containsProfanity('Hello world')).toBe(false)
+      // Note: 'spam' is not a profanity word in bad-words library
+      expect(containsProfanity('This is spam')).toBe(false)
     })
 
     it('should be case-insensitive', () => {
-      expect(containsProfanity('This is SPAM')).toBe(true)
       expect(containsProfanity('FUCK')).toBe(true)
+      expect(containsProfanity('ShIt')).toBe(true)
     })
   })
 

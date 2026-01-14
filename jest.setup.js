@@ -129,6 +129,8 @@ global.console = {
   ...console,
   error: jest.fn(),
   warn: jest.fn(),
+}
+
 // Ensure server-side secrets are NOT available in client-side tests
 if (typeof window !== 'undefined') {
   // These should be undefined in browser environment

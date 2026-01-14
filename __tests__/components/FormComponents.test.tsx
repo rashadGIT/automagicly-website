@@ -22,8 +22,9 @@ describe('Form Components', () => {
   describe('ROICalculator Component', () => {
     it('should render ROI calculator', () => {
       render(<ROICalculator />)
-      const container = screen.getByText(/ROI|Calculator|Return/i).closest('div')
-      expect(container).toBeTruthy()
+      // Use getAllByText since there are multiple matching elements
+      const elements = screen.getAllByText(/ROI|Calculator|Return/i)
+      expect(elements.length).toBeGreaterThan(0)
     })
 
     it('should have input fields', () => {
