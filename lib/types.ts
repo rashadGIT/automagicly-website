@@ -44,6 +44,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  sources?: string[];
 }
 
 export interface ChatAPIRequest {
@@ -57,6 +58,9 @@ export interface ChatAPIResponse {
   reply: string;
   blocked?: boolean;
   reason?: string;
+  sources?: string[];
+  conversationId?: string;
+  timestamp?: string;
 }
 
 export interface ROICalculation {

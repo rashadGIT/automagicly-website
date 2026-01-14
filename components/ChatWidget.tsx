@@ -53,11 +53,15 @@ export default function ChatWidget() {
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: data.reply || 'Sorry, I encountered an error. Please try again.',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        sources: data.sources || []
       };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      // Log error for debugging
+      console.error('Chat request failed:', error);
+
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: 'Sorry, I am having trouble connecting. Please try again later.',
@@ -123,13 +127,30 @@ export default function ChatWidget() {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
+                  className={`max-w-[80%] ${
                     message.role === 'user'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
-                  }`}
+                  } rounded-lg`}
                 >
-                  {message.content}
+                  <div className="p-3">
+                    {message.content}
+                  </div>
+                  {message.role === 'assistant' && message.sources && message.sources.length > 0 && (
+                    <div className="px-3 pb-3 pt-1">
+                      <div className="text-xs text-gray-500 mb-1">Sources:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {message.sources.map((source, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 bg-white text-gray-600 text-xs rounded-full border border-gray-200"
+                          >
+                            {source}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -2,13 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import type { ReviewFormData } from '@/lib/types';
-import { sendToN8N } from '@/lib/utils';
+import { sendToN8N, sanitizeHtml } from '@/lib/utils';
+import AIReviewHelper from './AIReviewHelper';
 
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL;
 
 interface StoredReview extends ReviewFormData {
   id: string;
   timestamp: number;
+}
+
+// Fisher-Yates shuffle algorithm for unbiased randomization
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 export default function Reviews() {
@@ -21,6 +32,10 @@ export default function Reviews() {
   const [approvedReviews, setApprovedReviews] = useState<ReviewFormData[]>([]);
   const [displayReviews, setDisplayReviews] = useState<ReviewFormData[]>([]);
   const [loadingApproved, setLoadingApproved] = useState(true);
+  const [showAIHelper, setShowAIHelper] = useState(false);
+  const [isAIAssisted, setIsAIAssisted] = useState(false);
+  const [expandedReviewIndex, setExpandedReviewIndex] = useState<number | null>(null);
+  const [drawerReview, setDrawerReview] = useState<ReviewFormData | null>(null);
 
   const [formData, setFormData] = useState<ReviewFormData>({
     name: '',
@@ -38,7 +53,10 @@ export default function Reviews() {
       try {
         setSubmittedReviews(JSON.parse(stored));
       } catch (e) {
-        console.error('Error loading reviews:', e);
+        // Log error and clear corrupted data
+        console.error('Failed to parse stored reviews, clearing corrupted data:', e);
+        localStorage.removeItem('automagicly_submitted_reviews');
+        // Note: User will see empty state, which is better than showing corrupted data
       }
     }
 
@@ -46,10 +64,30 @@ export default function Reviews() {
     loadApprovedReviews();
   }, []);
 
+  // Handle ESC key to close drawer
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && drawerReview) {
+        setDrawerReview(null);
+      }
+    };
+
+    if (drawerReview) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when drawer is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [drawerReview]);
+
   const loadApprovedReviews = async () => {
     setLoadingApproved(true);
     try {
-      const response = await fetch('/api/reviews-simple');
+      const response = await fetch('/api/reviews?status=approved');
       const data = await response.json();
       // Filter for approved reviews with rating > 3 (4 and 5 stars only)
       const approved = (data.reviews || []).filter((r: ReviewFormData) =>
@@ -57,24 +95,20 @@ export default function Reviews() {
       );
       setApprovedReviews(approved);
 
-      console.log('All approved reviews:', approved.map((r: ReviewFormData) => ({ name: r.name, featured: r.featured })));
-
       // Separate featured and non-featured reviews
       const featured = approved.filter((r: ReviewFormData) => r.featured === true);
       const nonFeatured = approved.filter((r: ReviewFormData) => r.featured !== true);
 
-      console.log('Featured reviews:', featured.map((r: ReviewFormData) => r.name));
-      console.log('Non-featured reviews:', nonFeatured.map((r: ReviewFormData) => r.name));
-
-      // Randomize non-featured reviews
-      const randomizedNonFeatured = [...nonFeatured].sort(() => 0.5 - Math.random());
+      // Randomize non-featured reviews using Fisher-Yates shuffle
+      const randomizedNonFeatured = fisherYatesShuffle([...nonFeatured]);
 
       // Show featured first, then random non-featured, limit to 3 total
       const combined = [...featured, ...randomizedNonFeatured].slice(0, 3);
-      console.log('Final display order:', combined.map((r: ReviewFormData) => r.name));
       setDisplayReviews(combined);
     } catch (error) {
-      console.error('Error loading approved reviews:', error);
+      // On error, display empty state - user will see "no reviews" message
+      setApprovedReviews([]);
+      setDisplayReviews([]);
     } finally {
       setLoadingApproved(false);
     }
@@ -134,6 +168,15 @@ export default function Reviews() {
     }
   };
 
+  const handleAIReviewApply = (review: string) => {
+    setFormData(prev => ({ ...prev, reviewText: review }));
+    setIsAIAssisted(true);
+  };
+
+  const handleRatingChange = (rating: number) => {
+    setFormData(prev => ({ ...prev, rating }));
+  };
+
   const renderStars = (rating: number) => {
     return (
       <div className="flex gap-1">
@@ -181,32 +224,94 @@ export default function Reviews() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayReviews.map((review, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow relative"
-                >
-                  {review.featured && (
-                    <div className="absolute top-4 right-4">
-                      <span className="text-2xl" title="Featured Review">⭐</span>
-                    </div>
-                  )}
+              {displayReviews.map((review, index) => {
+                const reviewText = review.review_text || review.reviewText || '';
+                const reviewLength = reviewText.length;
+                const isExpanded = expandedReviewIndex === index;
 
-                  <div className="mb-4">
-                    {renderStars(review.rating)}
-                  </div>
+                // Determine display logic based on length
+                const needsTruncation = reviewLength > 300;
+                const isLongReview = reviewLength > 1000; // Use drawer
+                const isMediumReview = reviewLength > 300 && reviewLength <= 1000; // Inline expand
 
-                  <p className="text-gray-700 mb-4 italic">"{review.review_text || review.reviewText}"</p>
+                // Truncate at last complete word before 300 chars without trailing space
+                let displayText = reviewText;
+                if (needsTruncation && !isExpanded) {
+                  const lastSpaceIndex = reviewText.lastIndexOf(' ', 300);
+                  displayText = lastSpaceIndex > 0
+                    ? reviewText.substring(0, lastSpaceIndex).trim()
+                    : reviewText.substring(0, 297).trim(); // Leave room for ellipsis
+                }
 
-                  <div className="border-t pt-4">
-                    <p className="font-semibold text-gray-900">{review.name || 'Anonymous'}</p>
-                    {review.company && review.company !== 'Anonymous Company' && (
-                      <p className="text-sm text-gray-600">{review.company}</p>
+                const handleExpand = () => {
+                  if (isLongReview) {
+                    setDrawerReview(review);
+                  } else {
+                    // Auto-collapse other reviews when expanding this one
+                    setExpandedReviewIndex(isExpanded ? null : index);
+                  }
+                };
+
+                return (
+                  <div
+                    key={index}
+                    className={`bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 relative ${
+                      isExpanded ? 'h-auto' : 'h-[400px]'
+                    } flex flex-col`}
+                  >
+                    {review.featured && (
+                      <div className="absolute top-4 right-4">
+                        <span className="text-2xl" title="Featured Review">⭐</span>
+                      </div>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">{review.service_type || review.serviceType}</p>
+
+                    <div className="mb-4">
+                      {renderStars(review.rating)}
+                    </div>
+
+                    <div className={isExpanded ? '' : 'flex-1 overflow-hidden'}>
+                      <p className="text-gray-700 mb-4 italic transition-all duration-300">
+                        "{sanitizeHtml(displayText)}{needsTruncation && !isExpanded && '...'}"
+                      </p>
+
+                      {needsTruncation && (
+                        <button
+                          onClick={handleExpand}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleExpand();
+                            }
+                          }}
+                          className={`text-sm font-medium mb-4 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 ${
+                            isLongReview
+                              ? 'text-purple-600 hover:text-purple-700'
+                              : 'text-blue-600 hover:text-blue-700'
+                          }`}
+                          aria-expanded={isExpanded}
+                          aria-label={isExpanded ? 'Show less' : isLongReview ? 'Read full review in panel' : 'Read more'}
+                        >
+                          {isExpanded ? (
+                            <>Show less ↑</>
+                          ) : isLongReview ? (
+                            <>Read full review →</>
+                          ) : (
+                            <>Read more ↓</>
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="border-t pt-4 mt-auto">
+                      <p className="font-semibold text-gray-900">{sanitizeHtml(review.name || 'Anonymous')}</p>
+                      {review.company && review.company !== 'Anonymous Company' && (
+                        <p className="text-sm text-gray-600">{sanitizeHtml(review.company)}</p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">{sanitizeHtml(review.service_type || review.serviceType)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -312,17 +417,48 @@ export default function Reviews() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Your Review *
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Your Review *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAIHelper(true)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                      >
+                        <span className="text-lg">✨</span>
+                        Get AI help
+                      </button>
+                    </div>
                     <textarea
                       required
                       rows={5}
+                      maxLength={2000}
                       value={formData.reviewText}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reviewText: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, reviewText: e.target.value }));
+                        // If user manually edits, remove AI-assisted flag
+                        if (isAIAssisted && e.target.value !== formData.reviewText) {
+                          setIsAIAssisted(false);
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Tell us about your experience..."
                     />
+                    <div className="flex justify-between items-center mt-1">
+                      <div className="text-xs text-gray-500">
+                        {formData.reviewText.length}/2000 characters
+                        {formData.reviewText.length >= 100 && formData.reviewText.length <= 500 && ' - great length!'}
+                        {formData.reviewText.length > 0 && formData.reviewText.length < 100 && ' - consider adding more detail'}
+                        {formData.reviewText.length > 1800 && ' - getting close to limit'}
+                      </div>
+                      {isAIAssisted && (
+                        <div className="flex items-center gap-1 text-xs text-purple-600">
+                          <span>✨</span>
+                          <span>AI-assisted review</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -435,6 +571,91 @@ export default function Reviews() {
           </div>
         )}
       </div>
+
+      {/* Slide-in Drawer for Long Reviews */}
+      {drawerReview && (
+        <div
+          className="fixed inset-0 z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="drawer-title"
+        >
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
+            onClick={() => setDrawerReview(null)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Panel */}
+          <div
+            className="fixed inset-y-0 right-0 max-w-full flex"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-screen max-w-md md:max-w-lg lg:max-w-xl">
+              <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in">
+                {/* Header */}
+                <div className="px-6 py-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
+                  <div className="flex items-start justify-between">
+                    <h2
+                      id="drawer-title"
+                      className="text-2xl font-bold text-gray-900"
+                    >
+                      Full Review
+                    </h2>
+                    <button
+                      onClick={() => setDrawerReview(null)}
+                      className="text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded p-1"
+                      aria-label="Close panel"
+                    >
+                      <span className="text-2xl">✕</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content - Scrollable with custom smooth scrollbar */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+                  <div className="mb-6">
+                    {renderStars(drawerReview.rating)}
+                  </div>
+
+                  <blockquote className="text-gray-700 text-lg italic leading-relaxed mb-6">
+                    "{sanitizeHtml(drawerReview.review_text || drawerReview.reviewText)}"
+                  </blockquote>
+
+                  <div className="border-t pt-6">
+                    <p className="font-semibold text-gray-900 text-lg">
+                      {sanitizeHtml(drawerReview.name || 'Anonymous')}
+                    </p>
+                    {drawerReview.company && drawerReview.company !== 'Anonymous Company' && (
+                      <p className="text-gray-600 mt-2">{sanitizeHtml(drawerReview.company)}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-2">
+                      {sanitizeHtml(drawerReview.service_type || drawerReview.serviceType)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer with hint */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 text-center">
+                    Press ESC or click outside to close
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Review Helper Modal */}
+      <AIReviewHelper
+        isOpen={showAIHelper}
+        onClose={() => setShowAIHelper(false)}
+        currentRating={formData.rating}
+        onRatingChange={handleRatingChange}
+        onApplyReview={handleAIReviewApply}
+      />
     </section>
   );
 }

@@ -55,6 +55,7 @@ export default function CustomBooking() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [busyDates, setBusyDates] = useState<Date[]>([]);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   const [formData, setFormData] = useState<BookingData>({
     name: '',
@@ -65,6 +66,11 @@ export default function CustomBooking() {
     notes: ''
   });
 
+  // Set isClient to true only after component mounts on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Fetch busy dates from calendar on component mount
   useEffect(() => {
     const loadBusyDates = async () => {
@@ -74,19 +80,17 @@ export default function CustomBooking() {
       setIsLoadingCalendar(false);
     };
 
-    console.log("Loading busy dates", busyDates);
-
     loadBusyDates();
   }, []);
 
-  console.log("Busy dates:", busyDates);
   // Disable past dates and busy dates from calendar
-  const disabledDays = [
+  // Only calculate on client to avoid UTC/timezone issues during SSR
+  const disabledDays = isClient ? [
     { before: addDays(new Date(), 1) },
     ...busyDates // Dates when you have calendar events
+  ] : [
+    { before: new Date('2099-01-01') } // During SSR, disable far future
   ];
-
-  console.log("Disabled days:", disabledDays);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelected(date);
@@ -267,6 +271,7 @@ export default function CustomBooking() {
                 selected={selected}
                 onSelect={handleDateSelect}
                 disabled={disabledDays}
+                today={isClient ? new Date() : undefined}
                 modifiersClassNames={{
                   selected: 'bg-brand-500',
                 }}
