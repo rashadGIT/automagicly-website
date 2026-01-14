@@ -1,0 +1,45 @@
+meta {
+  name: 09 - Conversation Memory (Step 2)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "What is my name?",
+    "sessionId": "test-memory-001",
+    "userEmail": "john@test.com"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("AI remembers the name John", function() {
+    const reply = res.body.reply.toLowerCase();
+    expect(reply).to.include('john');
+  });
+}
+
+docs {
+  # Conversation Memory Test - Step 2
+  
+  This tests if the AI remembers the user's name from the previous message.
+  
+  **IMPORTANT:** Run "08 - Conversation Memory (Step 1)" FIRST before running this test.
+  
+  The AI should remember that the user's name is "John".
+}
