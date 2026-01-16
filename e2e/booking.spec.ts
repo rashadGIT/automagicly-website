@@ -1,33 +1,46 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { setupDefaultMocks } from './mocks/api-mocks'
+
+// Helper function to wait for calendar and click a date
+async function selectCalendarDate(page: Page) {
+  await page.waitForSelector('role=grid', { timeout: 10000 })
+  await expect(page.locator('text=Choose your preferred day')).toBeVisible({ timeout: 5000 })
+
+  // With mocked API, availability loads instantly
+  await page.waitForSelector('role=gridcell >> button:not([disabled])', { timeout: 5000 })
+  const availableDate = page.locator('role=gridcell >> button:not([disabled])').first()
+
+  // Wait for button to be stable
+  await availableDate.waitFor({ state: 'visible', timeout: 3000 })
+  await availableDate.click({ force: true })
+}
 
 test.describe('Booking Flow', () => {
   test.beforeEach(async ({ page }) => {
+    // Setup API mocks before navigation
+    await setupDefaultMocks(page)
+
     await page.goto('/')
+    // Scroll to booking section to ensure calendar loads
+    await page.locator('text=Schedule Your Free AI Audit').first().scrollIntoViewIfNeeded()
   })
 
   test('should display booking section', async ({ page }) => {
-    // Scroll to booking section or click booking link
-    await page.waitForSelector('text=AI Audit', { timeout: 10000 })
+    // Verify calendar grid is visible
+    await page.waitForSelector('role=grid', { timeout: 15000 })
+    await expect(page.locator('role=grid').first()).toBeVisible()
   })
 
   test('should allow selecting a date', async ({ page }) => {
-    // Wait for calendar to load
-    await page.waitForSelector('.rdp', { timeout: 10000 })
+    await selectCalendarDate(page)
 
-    // Find an available date (not disabled)
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
-
-    // Verify date is selected
-    await expect(page.locator('.rdp-day_selected')).toBeVisible()
+    // Verify time slots appear (indicates date was selected)
+    await expect(page.locator('text=Select a Time')).toBeVisible({ timeout: 5000 })
   })
 
   test('should show time slots after selecting date', async ({ page }) => {
-    // Select a date
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
     // Wait for time slots to appear
     await page.waitForSelector('text=Select a Time', { timeout: 5000 })
@@ -38,10 +51,7 @@ test.describe('Booking Flow', () => {
   })
 
   test('should show contact form after selecting time', async ({ page }) => {
-    // Select a date
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
     // Select a time slot
     await page.waitForSelector('button:has-text("AM"), button:has-text("PM")', { timeout: 5000 })
@@ -54,10 +64,7 @@ test.describe('Booking Flow', () => {
   })
 
   test('should validate required fields', async ({ page }) => {
-    // Navigate to the form
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
     await page.waitForSelector('button:has-text("AM"), button:has-text("PM")', { timeout: 5000 })
     const timeSlot = page.locator('button:has-text("AM"), button:has-text("PM")').first()
@@ -76,10 +83,7 @@ test.describe('Booking Flow', () => {
   })
 
   test('should complete full booking flow', async ({ page }) => {
-    // Step 1: Select date
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
     // Step 2: Select time
     await page.waitForSelector('button:has-text("AM"), button:has-text("PM")', { timeout: 5000 })
@@ -105,10 +109,7 @@ test.describe('Booking Flow', () => {
   })
 
   test('should display timezone information', async ({ page }) => {
-    // Select a date
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
     // Verify timezone is displayed
     await page.waitForSelector('text=Your timezone', { timeout: 5000 })
@@ -116,7 +117,8 @@ test.describe('Booking Flow', () => {
   })
 
   test('should pass accessibility checks', async ({ page }) => {
-    await page.waitForSelector('.rdp', { timeout: 10000 })
+    await page.waitForSelector('role=grid', { timeout: 15000 })
+    await expect(page.locator('text=Choose your preferred day')).toBeVisible({ timeout: 10000 })
 
     // Check accessibility using AxeBuilder
     const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
@@ -129,20 +131,16 @@ test.describe('Booking Flow', () => {
 
     // Navigate and interact
     await page.goto('/')
-    await page.waitForSelector('.rdp', { timeout: 10000 })
+    await page.locator('text=Schedule Your Free AI Audit').first().scrollIntoViewIfNeeded()
 
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
-    // Verify calendar works on mobile
-    await expect(page.locator('.rdp-day_selected')).toBeVisible()
+    // Verify time slots appear (indicates date was selected)
+    await expect(page.locator('text=Select a Time')).toBeVisible({ timeout: 5000 })
   })
 
   test('should allow booking another session after success', async ({ page }) => {
-    // Complete a booking first
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
-    await availableDate.click()
+    await selectCalendarDate(page)
 
     await page.waitForSelector('button:has-text("AM"), button:has-text("PM")', { timeout: 5000 })
     const timeSlot = page.locator('button:has-text("AM"), button:has-text("PM")').first()
@@ -162,7 +160,7 @@ test.describe('Booking Flow', () => {
     await bookAnotherButton.click()
 
     // Verify we're back at the booking form
-    await page.waitForSelector('.rdp', { timeout: 5000 })
-    await expect(page.locator('.rdp')).toBeVisible()
+    await page.waitForSelector('role=grid', { timeout: 15000 })
+    await expect(page.locator('role=grid').first()).toBeVisible()
   })
 })

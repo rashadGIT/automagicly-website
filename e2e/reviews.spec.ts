@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { mockN8NReviewsWebhook, mockReviewsAPI } from './mocks/api-mocks'
 
 test.describe('Reviews Flow', () => {
   test.beforeEach(async ({ page }) => {
+    // Setup API mocks before navigation
+    await mockN8NReviewsWebhook(page)
+    await mockReviewsAPI(page)
+
     await page.goto('/')
 
     // Scroll to reviews section
@@ -34,8 +39,8 @@ test.describe('Reviews Flow', () => {
     // Try to submit without email (required field)
     await page.click('button:has-text("Submit Review")')
 
-    // Check HTML5 validation
-    const emailInput = page.locator('input[type="email"]')
+    // Check HTML5 validation - use more specific selector for review form
+    const emailInput = page.locator('#reviews input[type="email"]').first()
     const isValid = await emailInput.evaluate((el: HTMLInputElement) => el.validity.valid)
     expect(isValid).toBe(false)
   })
@@ -103,8 +108,8 @@ test.describe('Reviews Flow', () => {
     await page.waitForSelector('text=Submit a Review', { timeout: 10000 })
     await page.click('button:has-text("Submit a Review")')
 
-    // Find service type select
-    const serviceSelect = page.locator('select')
+    // Find service type select - use more specific selector for review form
+    const serviceSelect = page.locator('#reviews select').first()
     await expect(serviceSelect).toBeVisible()
 
     // Verify options

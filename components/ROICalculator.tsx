@@ -115,10 +115,11 @@ export default function ROICalculator() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Task Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="task-to-automate" className="block text-sm font-semibold text-gray-700 mb-2">
                 Task to Automate
               </label>
               <select
+                id="task-to-automate"
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
                 className="input-field"

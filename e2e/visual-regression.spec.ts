@@ -3,8 +3,14 @@
  * Detects unintended visual changes in the UI
  */
 import { test, expect } from '@playwright/test'
+import { setupDefaultMocks } from './mocks/api-mocks'
 
 test.describe('Visual Regression Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup API mocks before each test
+    await setupDefaultMocks(page)
+  })
+
   test('homepage should match snapshot', async ({ page }) => {
     await page.goto('/')
 
@@ -22,7 +28,7 @@ test.describe('Visual Regression Tests', () => {
     await page.goto('/')
 
     // Wait for calendar to render
-    await page.waitForSelector('.rdp', { timeout: 10000 })
+    await page.waitForSelector('role=grid', { timeout: 10000 })
     await page.waitForLoadState('networkidle')
 
     const bookingSection = page.locator('#booking')
@@ -51,7 +57,7 @@ test.describe('Visual Regression Tests', () => {
     await page.click('button:has-text("Submit a Review")')
     await page.waitForSelector('text=Submit Your Review')
 
-    const form = page.locator('form')
+    const form = page.locator('#reviews form').first()
     await expect(form).toHaveScreenshot('review-form.png', {
       animations: 'disabled',
     })
@@ -85,8 +91,8 @@ test.describe('Visual Regression Tests', () => {
     await page.goto('/')
 
     // Complete booking flow
-    await page.waitForSelector('.rdp', { timeout: 10000 })
-    const availableDate = page.locator('.rdp-day:not(.rdp-day_disabled)').first()
+    await page.waitForSelector('role=grid', { timeout: 10000 })
+    const availableDate = page.locator('role=gridcell >> button:not([disabled])').first()
     await availableDate.click()
 
     await page.waitForSelector('button:has-text("AM"), button:has-text("PM")', { timeout: 5000 })
