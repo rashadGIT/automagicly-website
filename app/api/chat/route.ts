@@ -147,7 +147,20 @@ export async function POST(request: NextRequest) {
           throw new Error('Invalid n8n response format');
         }
 
-        // Handle RAG chatbot response format
+        // Handle n8n AI Agent response format (current workflow)
+        if (n8nData.reply && typeof n8nData.reply === 'string') {
+          // Sanitize message content to prevent XSS
+          const sanitizedMessage = sanitizeHtml(n8nData.reply);
+
+          return NextResponse.json({
+            reply: sanitizedMessage,
+            sources: [], // AI Agent workflow doesn't return sources
+            sessionId: typeof n8nData.sessionId === 'string' ? n8nData.sessionId : sessionId,
+            timestamp: typeof n8nData.timestamp === 'string' ? n8nData.timestamp : new Date().toISOString()
+          });
+        }
+
+        // Handle RAG chatbot response format (legacy/alternative workflow)
         if (n8nData.success && n8nData.message) {
           // Sanitize message content to prevent XSS
           const sanitizedMessage = typeof n8nData.message === 'string'
