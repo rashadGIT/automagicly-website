@@ -27,10 +27,14 @@ https://rashadbarnett.app.n8n.cloud/webhook-test/waitlist
 CHAT ASSISTANT (Server-side only, NOT public)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+⚠️  CRITICAL: These are server-side variables required for the chatbot to work!
+⚠️  These are NOT NEXT_PUBLIC_ variables (called from API route, not browser)
+
 N8N_CHAT_WEBHOOK_URL
-⚠️  Get this URL from N8N after importing chat-workflow.json
-⚠️  See AUTOMAGICLY_ASSISTANT_SETUP.md for complete setup instructions
-⚠️  This is NOT a NEXT_PUBLIC_ variable (called from API route, not browser)
+https://rashadbarnett.app.n8n.cloud/webhook/chat
+
+N8N_CHAT_API_KEY
+9e9b75e99e1883418181ed35b3cc61a4594cd768022a49d8e65eee36d738071b
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -83,7 +87,8 @@ INSTRUCTIONS:
 1. Copy GOOGLE_PRIVATE_KEY from your .env file
 2. Copy SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY from your .env file
 3. Choose a strong NEXT_PUBLIC_ADMIN_PASSWORD
-4. In AWS Amplify Console, add each variable one by one:
+4. ⚠️  IMPORTANT: Add BOTH chat variables (N8N_CHAT_WEBHOOK_URL and N8N_CHAT_API_KEY)
+5. In AWS Amplify Console, add each variable one by one:
    - Key: Variable name (e.g., GOOGLE_SERVICE_ACCOUNT_EMAIL)
    - Value: The actual value
 
@@ -91,6 +96,12 @@ INSTRUCTIONS:
    - Never commit .env files to Git (they're already in .gitignore)
    - Keep SUPABASE_SERVICE_ROLE_KEY secret
    - Keep GOOGLE_PRIVATE_KEY secret
+   - Keep N8N_CHAT_API_KEY secret
    - Use a strong ADMIN_PASSWORD
+
+⚠️  COMMON ISSUE: If chatbot doesn't work in production, verify that BOTH:
+   - N8N_CHAT_WEBHOOK_URL
+   - N8N_CHAT_API_KEY
+   are added to AWS Amplify environment variables (NOT as NEXT_PUBLIC_ variables)
 
 After adding all variables, Amplify will automatically redeploy your app.
