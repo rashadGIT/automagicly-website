@@ -1,8 +1,18 @@
 import { DynamoDBClient, ScanCommand, QueryCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { randomUUID } from 'crypto';
 
 const TABLE_NAME = 'automagicly-reviews';
 const GSI_NAME = 'status-created_at-index';
+
+// Polyfill for crypto.randomUUID in test environments
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback to Node.js crypto module
+  return randomUUID();
+}
 
 function getClient() {
   // Validate required environment variables
@@ -90,7 +100,7 @@ export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'u
   try {
     const client = getClient();
     const now = Date.now();
-    const id = crypto.randomUUID();
+    const id = generateUUID();
 
     const newReview: Review = {
       ...review,

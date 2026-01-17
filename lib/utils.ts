@@ -6,6 +6,16 @@ import { NextRequest } from 'next/server';
 import { sanitizeHtml as sanitize } from './sanitize';
 import { Filter } from 'bad-words';
 import { logger } from './logger';
+import { randomUUID } from 'crypto';
+
+// Polyfill for crypto.randomUUID in test environments
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback to Node.js crypto module
+  return randomUUID();
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,8 +30,8 @@ export function getSessionId(): string {
 
   let sessionId = localStorage.getItem('automagicly_session_id');
   if (!sessionId) {
-    // Use crypto.randomUUID() for cryptographically secure random IDs
-    sessionId = `session_${crypto.randomUUID()}`;
+    // Use generateUUID() for cryptographically secure random IDs
+    sessionId = `session_${generateUUID()}`;
     localStorage.setItem('automagicly_session_id', sessionId);
   }
   return sessionId;
