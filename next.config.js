@@ -14,6 +14,8 @@ const nextConfig = {
     GOOGLE_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
     GOOGLE_CALENDAR_ID: process.env.GOOGLE_CALENDAR_ID,
+    N8N_CHAT_WEBHOOK_URL: process.env.N8N_CHAT_WEBHOOK_URL,
+    N8N_CHAT_API_KEY: process.env.N8N_CHAT_API_KEY,
     REGION: process.env.REGION || 'us-east-1',
   },
   async headers() {
