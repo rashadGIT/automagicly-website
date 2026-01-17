@@ -22,6 +22,8 @@ frontend:
         - echo "GOOGLE_SERVICE_ACCOUNT_EMAIL=$GOOGLE_SERVICE_ACCOUNT_EMAIL" >> .env.production
         - echo "GOOGLE_PRIVATE_KEY=$GOOGLE_PRIVATE_KEY" >> .env.production
         - echo "GOOGLE_CALENDAR_ID=$GOOGLE_CALENDAR_ID" >> .env.production
+        - echo "N8N_CHAT_WEBHOOK_URL=$N8N_CHAT_WEBHOOK_URL" >> .env.production
+        - echo "N8N_CHAT_API_KEY=$N8N_CHAT_API_KEY" >> .env.production
         - echo "REGION=$REGION" >> .env.production
     build:
       commands:
