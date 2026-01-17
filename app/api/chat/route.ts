@@ -22,6 +22,12 @@ export async function POST(request: NextRequest) {
     hasWebhookUrl: !!N8N_CHAT_WEBHOOK_URL,
     hasApiKey: !!N8N_CHAT_API_KEY,
     webhookUrl: N8N_CHAT_WEBHOOK_URL ? 'SET' : 'NOT_SET',
+    // Check if env vars exist directly
+    directEnvCheck: {
+      hasN8N_CHAT_WEBHOOK_URL: !!process.env.N8N_CHAT_WEBHOOK_URL,
+      hasN8N_CHAT_API_KEY: !!process.env.N8N_CHAT_API_KEY,
+      N8N_value: process.env.N8N_CHAT_WEBHOOK_URL?.substring(0, 30) + '...',
+    }
   });
 
   // CSRF Protection
