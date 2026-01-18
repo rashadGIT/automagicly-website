@@ -45,7 +45,7 @@
 
   /* Button secondary */
   .btn-secondary {
-    @apply px-8 py-4 bg-white hover:bg-gray-50 text-brand-600 font-semibold rounded-xl border-2 border-brand-600 hover:border-brand-700 transition-all duration-300 hover:shadow-lg;
+    @apply px-8 py-4 bg-white hover:bg-gray-50 text-brand-700 font-semibold rounded-xl border-2 border-brand-700 hover:border-brand-800 transition-all duration-300 hover:shadow-lg;
   }
 
   /* Input field */

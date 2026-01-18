@@ -16,20 +16,6 @@ function getDefaultFallbackResponse(): string {
 }
 
 export async function POST(request: NextRequest) {
-  // Debug: Log environment variable status
-  logger.info('Chat API called', {
-    path: '/api/chat',
-    hasWebhookUrl: !!N8N_CHAT_WEBHOOK_URL,
-    hasApiKey: !!N8N_CHAT_API_KEY,
-    webhookUrl: N8N_CHAT_WEBHOOK_URL ? 'SET' : 'NOT_SET',
-    // Check if env vars exist directly
-    directEnvCheck: {
-      hasN8N_CHAT_WEBHOOK_URL: !!process.env.N8N_CHAT_WEBHOOK_URL,
-      hasN8N_CHAT_API_KEY: !!process.env.N8N_CHAT_API_KEY,
-      N8N_value: process.env.N8N_CHAT_WEBHOOK_URL?.substring(0, 30) + '...',
-    }
-  });
-
   // CSRF Protection
   if (!verifyCsrfToken(request)) {
     logger.security('CSRF validation failed', {
@@ -138,11 +124,6 @@ export async function POST(request: NextRequest) {
     // If n8n webhook is configured, forward the request
     if (N8N_CHAT_WEBHOOK_URL) {
       try {
-        logger.info('Calling n8n webhook', {
-          url: N8N_CHAT_WEBHOOK_URL,
-          hasApiKey: !!N8N_CHAT_API_KEY,
-        });
-
         const n8nResponse = await fetch(N8N_CHAT_WEBHOOK_URL, {
           method: 'POST',
           headers: {
@@ -155,21 +136,11 @@ export async function POST(request: NextRequest) {
           }),
         });
 
-        logger.info('N8n response received', {
-          status: n8nResponse.status,
-          ok: n8nResponse.ok,
-        });
-
         if (!n8nResponse.ok) {
           throw new Error(`n8n request failed with status ${n8nResponse.status}`);
         }
 
         const n8nData = await n8nResponse.json();
-        logger.info('N8n data parsed', {
-          hasReply: !!n8nData.reply,
-          hasMessage: !!n8nData.message,
-          hasSuccess: !!n8nData.success,
-        });
 
         // Validate n8n response structure
         if (typeof n8nData !== 'object' || n8nData === null) {
