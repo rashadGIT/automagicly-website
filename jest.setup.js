@@ -1,5 +1,15 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import { randomUUID } from 'crypto'
+
+// Polyfill crypto.randomUUID for Node 18 test environment
+// Node 18 may not have crypto.randomUUID available in global scope
+if (typeof global.crypto === 'undefined') {
+  global.crypto = {}
+}
+if (typeof global.crypto.randomUUID !== 'function') {
+  global.crypto.randomUUID = randomUUID
+}
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
