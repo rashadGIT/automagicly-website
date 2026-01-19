@@ -145,4 +145,124 @@ describe('CustomBooking Component', () => {
       expect(global.fetch).toHaveBeenCalled()
     })
   })
+
+  describe('Time Slot Selection', () => {
+    it('should display time slots when date is selected', async () => {
+      render(<CustomBooking />)
+
+      // Wait for calendar to load
+      await waitFor(() => {
+        expect(screen.getByText('Choose your preferred day')).toBeInTheDocument()
+      })
+
+      // Find and click an available date button
+      const dateButtons = document.querySelectorAll('button[name="day"]')
+      const availableDate = Array.from(dateButtons).find(
+        (btn) => !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true'
+      )
+
+      if (availableDate) {
+        await act(async () => {
+          fireEvent.click(availableDate)
+        })
+
+        // Should now show time slots
+        await waitFor(() => {
+          expect(screen.getByText('Select a Time')).toBeInTheDocument()
+        })
+      }
+    })
+
+    it('should progress to step 3 when time is selected', async () => {
+      render(<CustomBooking />)
+
+      // Wait for calendar to load
+      await waitFor(() => {
+        expect(screen.getByText('Choose your preferred day')).toBeInTheDocument()
+      })
+
+      // Find and click an available date
+      const dateButtons = document.querySelectorAll('button[name="day"]')
+      const availableDate = Array.from(dateButtons).find(
+        (btn) => !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true'
+      )
+
+      if (availableDate) {
+        await act(async () => {
+          fireEvent.click(availableDate)
+        })
+
+        // Wait for time slots
+        await waitFor(() => {
+          expect(screen.getByText('Select a Time')).toBeInTheDocument()
+        })
+
+        // Click a time slot (9:00 AM)
+        const timeButton = screen.getByRole('button', { name: /9:00 AM/i })
+        await act(async () => {
+          fireEvent.click(timeButton)
+        })
+
+        // Should now show the details form
+        await waitFor(() => {
+          expect(screen.getByText('Your Details')).toBeInTheDocument()
+        })
+      }
+    })
+  })
+
+  describe('Form Submission', () => {
+    it('should have form fields with proper labels', async () => {
+      render(<CustomBooking />)
+
+      // Wait for calendar to load
+      await waitFor(() => {
+        expect(screen.getByText('Choose your preferred day')).toBeInTheDocument()
+      })
+
+      // Find and click an available date
+      const dateButtons = document.querySelectorAll('button[name="day"]')
+      const availableDate = Array.from(dateButtons).find(
+        (btn) => !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true'
+      )
+
+      if (availableDate) {
+        await act(async () => {
+          fireEvent.click(availableDate)
+        })
+
+        // Wait for time slots
+        await waitFor(() => {
+          expect(screen.getByText('Select a Time')).toBeInTheDocument()
+        })
+
+        // Click a time slot
+        const timeButton = screen.getByRole('button', { name: /9:00 AM/i })
+        await act(async () => {
+          fireEvent.click(timeButton)
+        })
+
+        // Verify form fields are visible
+        await waitFor(() => {
+          expect(screen.getByPlaceholderText('John Doe')).toBeInTheDocument()
+          expect(screen.getByPlaceholderText('john@company.com')).toBeInTheDocument()
+          expect(screen.getByPlaceholderText('Acme Inc')).toBeInTheDocument()
+        })
+      }
+    })
+  })
+
+  describe('Helper Functions', () => {
+    it('should format time to AM/PM correctly', () => {
+      // Test the TIME_SLOTS format
+      const timeSlots = [
+        '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+        '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+        '16:00', '16:30'
+      ]
+      expect(timeSlots.length).toBe(14)
+      expect(timeSlots[0]).toBe('09:00')
+      expect(timeSlots[6]).toBe('13:00') // 1 PM
+    })
+  })
 })

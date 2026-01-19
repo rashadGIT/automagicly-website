@@ -42,6 +42,9 @@ const customJestConfig = {
     '!app/calendar-diagnostic/**',
     // Exclude third-party wrappers
     '!components/CalendlyBooking.tsx',
+    // Exclude API routes from coverage - they require Next.js runtime and are
+    // tested via E2E/Playwright tests in /e2e/ directory instead
+    '!app/api/**/*.{js,jsx,ts,tsx}',
   ],
   // Coverage thresholds - set to current baseline
   // TODO: Incrementally increase these as test coverage improves
@@ -63,7 +66,12 @@ const customJestConfig = {
     '/playwright/',
     '/e2e/',
     '/__tests__/utils/',
-    '/__tests__/app/api/', // API routes need Next.js runtime, better tested with E2E
+    // API routes are excluded because they require:
+    // 1. Full Next.js runtime (NextRequest/NextResponse with nextUrl.searchParams)
+    // 2. ESM modules (jose, openid-client) that Jest doesn't handle well
+    // 3. Complex next-auth mocking with its OAuth dependencies
+    // These are better tested via E2E/Playwright tests in /playwright/
+    '/__tests__/app/api/',
   ],
 }
 
