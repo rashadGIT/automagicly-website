@@ -27,6 +27,9 @@ const mockUnmarshall = unmarshall as jest.MockedFunction<typeof unmarshall>
 describe('lib/db.ts', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockSend.mockReset()
+    mockMarshall.mockReset()
+    mockUnmarshall.mockReset()
 
     ;(DynamoDBClient as jest.Mock).mockImplementation(() => ({
       send: mockSend,
@@ -57,6 +60,23 @@ describe('lib/db.ts', () => {
       )
 
       process.env.DB_SECRET_ACCESS_KEY = originalSecret
+    })
+
+    it('should default region to us-east-1 when REGION is missing', async () => {
+      const originalRegion = process.env.REGION
+      delete process.env.REGION
+
+      mockSend.mockResolvedValueOnce({ Items: [] })
+
+      await getReviews()
+
+      expect(DynamoDBClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          region: 'us-east-1',
+        })
+      )
+
+      process.env.REGION = originalRegion
     })
   })
 
@@ -89,6 +109,14 @@ describe('lib/db.ts', () => {
 
       expect(result[0].id).toBe('2')
       expect(result[1].id).toBe('1')
+    })
+
+    it('should return empty array when scan has no items', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await getReviews()
+
+      expect(result).toEqual([])
     })
 
     it('should filter reviews by status', async () => {
@@ -141,6 +169,49 @@ describe('lib/db.ts', () => {
       expect(result).toHaveLength(1)
       expect(result[0].rating).toBe(5)
     })
+
+    it('should return all reviews for non-approved status', async () => {
+      const mockReviews = [
+        {
+          id: '1',
+          rating: 1,
+          review_text: 'Bad',
+          service_type: 'One-Off',
+          status: 'pending',
+          created_at: 1000,
+          updated_at: 1000,
+        },
+        {
+          id: '2',
+          rating: 5,
+          review_text: 'Great',
+          service_type: 'AI Audit',
+          status: 'pending',
+          created_at: 2000,
+          updated_at: 2000,
+        },
+      ]
+
+      mockSend.mockResolvedValueOnce({ Items: mockReviews })
+
+      const result = await getReviews('pending')
+
+      expect(result).toHaveLength(2)
+    })
+
+    it('should return empty array when no items are returned', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await getReviews('approved')
+
+      expect(result).toEqual([])
+    })
+
+    it('should rethrow errors from the database client', async () => {
+      mockSend.mockRejectedValueOnce(new Error('DynamoDB failure'))
+
+      await expect(getReviews()).rejects.toThrow('DynamoDB failure')
+    })
   })
 
   describe('createReview', () => {
@@ -157,6 +228,71 @@ describe('lib/db.ts', () => {
       expect(result.id).toBeDefined()
       expect(result.created_at).toBeDefined()
       expect(result.updated_at).toBeDefined()
+    })
+
+    it('should use browser crypto.randomUUID when available', async () => {
+      const originalCrypto = (global as any).crypto
+      ;(global as any).crypto = { randomUUID: jest.fn(() => 'browser-uuid') }
+
+      jest.resetModules()
+      ;(DynamoDBClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }))
+      jest.doMock('crypto', () => ({ randomUUID: () => 'node-uuid' }))
+
+      const { createReview: createReviewFresh } = require('@/lib/db')
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await createReviewFresh({
+        rating: 5,
+        review_text: 'Excellent!',
+        service_type: 'AI Partnership',
+        status: 'pending',
+      })
+
+      expect(result.id).toBe('browser-uuid')
+
+      ;(global as any).crypto = originalCrypto
+      jest.dontMock('crypto')
+    })
+
+    it('should fall back to Node randomUUID when browser crypto is missing', async () => {
+      const originalCrypto = (global as any).crypto
+      ;(global as any).crypto = undefined
+
+      jest.resetModules()
+      ;(DynamoDBClient as jest.Mock).mockImplementation(() => ({
+        send: mockSend,
+      }))
+      jest.doMock('crypto', () => ({ randomUUID: () => 'node-uuid' }))
+
+      const { createReview: createReviewFresh } = require('@/lib/db')
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await createReviewFresh({
+        rating: 5,
+        review_text: 'Excellent!',
+        service_type: 'AI Partnership',
+        status: 'pending',
+      })
+
+      expect(result.id).toBe('node-uuid')
+
+      ;(global as any).crypto = originalCrypto
+      jest.dontMock('crypto')
+    })
+
+    it('should rethrow errors from the database client', async () => {
+      mockSend.mockRejectedValueOnce(new Error('Create failed'))
+
+      await expect(
+        createReview({
+          rating: 5,
+          review_text: 'Excellent!',
+          service_type: 'AI Partnership',
+          status: 'pending',
+        })
+      ).rejects.toThrow('Create failed')
     })
   })
 
@@ -192,6 +328,54 @@ describe('lib/db.ts', () => {
         })
       )
     })
+
+    it('should update featured flag without status', async () => {
+      mockSend.mockResolvedValueOnce({
+        Attributes: {
+          id: 'test-id',
+          featured: true,
+        },
+      })
+
+      const result = await updateReview('test-id', { featured: true })
+
+      expect(result?.featured).toBe(true)
+      const valuesCall = mockMarshall.mock.calls.find(
+        (call) => call[0] && Object.prototype.hasOwnProperty.call(call[0], ':featured')
+      )
+      const valuesArg = valuesCall?.[0] as Record<string, unknown>
+      expect(valuesArg).toHaveProperty(':featured', true)
+    })
+
+    it('should not set approved_at when status is not approved', async () => {
+      mockSend.mockResolvedValueOnce({
+        Attributes: {
+          id: 'test-id',
+          status: 'rejected',
+        },
+      })
+
+      await updateReview('test-id', { status: 'rejected' })
+
+      const valuesArg = mockMarshall.mock.calls[0][0] as Record<string, unknown>
+      expect(valuesArg).not.toHaveProperty(':approved_at')
+    })
+
+    it('should return null when no attributes are returned', async () => {
+      mockSend.mockResolvedValueOnce({})
+
+      const result = await updateReview('test-id', { status: 'pending' })
+
+      expect(result).toBeNull()
+    })
+
+    it('should rethrow errors from the database client', async () => {
+      mockSend.mockRejectedValueOnce(new Error('Update failed'))
+
+      await expect(updateReview('test-id', { status: 'pending' })).rejects.toThrow(
+        'Update failed'
+      )
+    })
   })
 
   describe('deleteReview', () => {
@@ -201,6 +385,12 @@ describe('lib/db.ts', () => {
       const result = await deleteReview('test-id')
 
       expect(result).toBe(true)
+    })
+
+    it('should rethrow errors from the database client', async () => {
+      mockSend.mockRejectedValueOnce(new Error('Delete failed'))
+
+      await expect(deleteReview('test-id')).rejects.toThrow('Delete failed')
     })
   })
 })

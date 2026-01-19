@@ -7,6 +7,10 @@ import {
   formatNumber,
   sendToN8N,
   fetchBusyDates,
+  scrollToElement,
+  isAdmin,
+  verifyCsrfToken,
+  sanitizeHtml,
 } from '@/lib/utils'
 import { createMockFetch, resetMockFetch } from '../utils/mock-helpers'
 
@@ -42,6 +46,33 @@ describe('Utils', () => {
       // New format uses crypto.randomUUID() which produces hyphenated UUIDs
       expect(sessionId).toMatch(/^session_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
       expect(localStorage.getItem('automagicly_session_id')).toBe(sessionId)
+    })
+
+    it('should use Node randomUUID fallback when crypto.randomUUID is unavailable', () => {
+      const originalCrypto = (global as any).crypto
+      const originalWindow = (global as any).window
+      Object.defineProperty(global, 'crypto', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      })
+
+      jest.isolateModules(() => {
+        jest.doMock('crypto', () => ({ randomUUID: () => 'fallback-uuid' }))
+
+        const { getSessionId: getSessionIdFresh } = require('@/lib/utils')
+        const sessionId = getSessionIdFresh()
+
+        expect(sessionId).toBe('session_fallback-uuid')
+      })
+
+      Object.defineProperty(global, 'crypto', {
+        value: originalCrypto,
+        configurable: true,
+        writable: true,
+      })
+      ;(global as any).window = originalWindow
+      jest.dontMock('crypto')
     })
   })
 
@@ -110,6 +141,13 @@ describe('Utils', () => {
     })
   })
 
+  describe('sanitizeHtml', () => {
+    it('should strip HTML content', () => {
+      const result = sanitizeHtml('<b>bold</b>')
+      expect(result).not.toContain('<b>')
+    })
+  })
+
   describe('sendToN8N', () => {
     beforeEach(() => {
       resetMockFetch()
@@ -143,6 +181,14 @@ describe('Utils', () => {
 
     it('should handle fetch errors', async () => {
       createMockFetch({ error: 'Failed' }, false, 500)
+
+      const result = await sendToN8N('https://test.webhook.url', { test: 'data' })
+
+      expect(result).toBe(false)
+    })
+
+    it('should handle network failures', async () => {
+      global.fetch = jest.fn().mockRejectedValue(new Error('Network down'))
 
       const result = await sendToN8N('https://test.webhook.url', { test: 'data' })
 
@@ -208,6 +254,14 @@ describe('Utils', () => {
       expect(result).toEqual([])
     })
 
+    it('should handle request failures', async () => {
+      global.fetch = jest.fn().mockRejectedValue(new Error('Fetch failed'))
+
+      const result = await fetchBusyDates()
+
+      expect(result).toEqual([])
+    })
+
     it('should convert date strings to Date objects', async () => {
       const mockBusyDates = ['2025-01-15']
       createMockFetch({ busyDates: mockBusyDates }, true, 200)
@@ -216,6 +270,74 @@ describe('Utils', () => {
 
       expect(result[0]).toBeInstanceOf(Date)
       expect(result[0].toISOString()).toContain('2025-01-15')
+    })
+  })
+
+  describe('scrollToElement', () => {
+    it('should scroll to element when found', () => {
+      const element = document.createElement('div')
+      element.id = 'target'
+      element.scrollIntoView = jest.fn()
+      document.body.appendChild(element)
+
+      scrollToElement('target')
+
+      expect(element.scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'start',
+      })
+      document.body.removeChild(element)
+    })
+
+    it('should do nothing when element is not found', () => {
+      jest.spyOn(document, 'getElementById').mockReturnValue(null as any)
+
+      scrollToElement('missing')
+
+      expect(document.getElementById).toHaveBeenCalledWith('missing')
+      ;(document.getElementById as jest.Mock).mockRestore()
+    })
+  })
+
+  describe('isAdmin', () => {
+    it('should return true for admin role', () => {
+      expect(isAdmin({ user: { role: 'admin' } })).toBe(true)
+    })
+
+    it('should return false for missing role', () => {
+      expect(isAdmin({ user: {} })).toBe(false)
+    })
+  })
+
+  describe('verifyCsrfToken', () => {
+    const makeRequest = (headers: Record<string, string>) => ({
+      headers: new Headers(headers),
+    }) as any
+
+    it('should accept matching origin', () => {
+      const request = makeRequest({
+        host: 'example.com',
+        origin: 'https://example.com',
+      })
+
+      expect(verifyCsrfToken(request)).toBe(true)
+    })
+
+    it('should accept matching referer when origin is missing', () => {
+      const request = makeRequest({
+        host: 'example.com',
+        referer: 'https://example.com/path',
+      })
+
+      expect(verifyCsrfToken(request)).toBe(true)
+    })
+
+    it('should reject when no origin or referer is present', () => {
+      const request = makeRequest({
+        host: 'example.com',
+      })
+
+      expect(verifyCsrfToken(request)).toBe(false)
     })
   })
 })

@@ -68,6 +68,8 @@ describe('RUM Configuration', () => {
       const result = initRUM();
 
       expect(AwsRum).toHaveBeenCalled();
+      const config = (AwsRum as jest.Mock).mock.calls[0][3];
+      expect(config.sessionSampleRate).toBe(0.1);
       expect(result).toBe(mockAwsRumInstance);
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('CloudWatch RUM initialized successfully')
@@ -84,6 +86,8 @@ describe('RUM Configuration', () => {
       const result = initRUM();
 
       expect(AwsRum).toHaveBeenCalled();
+      const config = (AwsRum as jest.Mock).mock.calls[0][3];
+      expect(config.sessionSampleRate).toBe(1);
       expect(result).toBe(mockAwsRumInstance);
     });
 
@@ -155,6 +159,17 @@ describe('RUM Configuration', () => {
       expect(mockRecordEvent).toHaveBeenCalledWith('error_metadata', metadata);
     });
 
+    it('should not record metadata when not provided', () => {
+      const { initRUM, recordError } = require('@/lib/rum-config');
+      initRUM();
+
+      const testError = new Error('Test error');
+      recordError(testError);
+
+      expect(mockRecordError).toHaveBeenCalledWith(testError);
+      expect(mockRecordEvent).not.toHaveBeenCalled();
+    });
+
     it('should not record when RUM is not initialized', () => {
       process.env.NODE_ENV = 'development';
       delete process.env.NEXT_PUBLIC_ENABLE_RUM;
@@ -195,6 +210,14 @@ describe('RUM Configuration', () => {
 
       // Should not throw
       expect(() => recordEvent('test', { key: 'value' })).not.toThrow();
+    });
+  });
+
+  describe('exports', () => {
+    it('should export rumInstance', () => {
+      const module = require('@/lib/rum-config');
+
+      expect(module.rumInstance).toBeDefined();
     });
   });
 });

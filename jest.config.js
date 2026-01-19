@@ -46,14 +46,14 @@ const customJestConfig = {
     // tested via E2E/Playwright tests in /e2e/ directory instead
     '!app/api/**/*.{js,jsx,ts,tsx}',
   ],
-  // Coverage thresholds - set to current baseline
-  // TODO: Incrementally increase these as test coverage improves
+  // Coverage thresholds - updated to reflect current baseline (Jan 2026)
+  // Current: Statements 89%, Branches 79%, Functions 82%, Lines 89%
   coverageThreshold: {
     global: {
-      branches: 20,
-      functions: 35,
-      lines: 35,
-      statements: 35,
+      branches: 75,
+      functions: 80,
+      lines: 85,
+      statements: 85,
     },
   },
   testMatch: [

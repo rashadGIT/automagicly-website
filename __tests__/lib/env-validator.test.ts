@@ -119,6 +119,19 @@ describe('env-validator', () => {
       warnSpy.mockRestore()
     })
 
+    it('should not log warnings when optional variables are set', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+      process.env.REGION = 'us-east-1'
+      process.env.NEXT_PUBLIC_SENTRY_DSN = 'https://example.com/sentry'
+
+      validateEnvironmentVariables()
+
+      expect(warnSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('Environment Variable Warnings')
+      )
+      warnSpy.mockRestore()
+    })
+
     it('should warn about missing Sentry DSN in production', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
       process.env.NODE_ENV = 'production'
