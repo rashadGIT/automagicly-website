@@ -17,7 +17,6 @@ test.describe('API Routes', () => {
 
     test('should reject requests without Content-Type header', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
-        data: { message: 'Hello', sessionId: 'test-session' },
         headers: csrfHeaders,
       });
 
