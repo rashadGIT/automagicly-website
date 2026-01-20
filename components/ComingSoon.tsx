@@ -139,10 +139,11 @@ export default function ComingSoon() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="waitlist-email" className="block text-sm font-semibold text-gray-700 mb-2">
                     Email *
                   </label>
                   <input
+                    id="waitlist-email"
                     type="email"
                     required
                     value={email}
