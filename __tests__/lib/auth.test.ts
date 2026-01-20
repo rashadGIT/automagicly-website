@@ -161,6 +161,85 @@ describe('lib/auth.ts', () => {
     // The integration tests below verify the complete authentication flow
   })
 
+  describe('CredentialsProvider authorize (isolated)', () => {
+    const originalEnv = process.env
+
+    beforeEach(() => {
+      process.env = { ...originalEnv }
+      process.env.ADMIN_EMAIL = 'admin@test.com'
+      process.env.ADMIN_PASSWORD_HASH = 'hashed'
+      process.env.NEXTAUTH_SECRET = 'test-secret-key-for-testing-only'
+    })
+
+    afterEach(() => {
+      process.env = originalEnv
+      jest.resetModules()
+      jest.dontMock('next-auth/providers/credentials')
+      jest.dontMock('bcryptjs')
+    })
+
+    const setupAuthorize = (compareResult: boolean) => {
+      jest.resetModules()
+      jest.doMock('next-auth/providers/credentials', () => ({
+        __esModule: true,
+        default: (config: any) => config,
+      }))
+      const compare = jest.fn().mockResolvedValue(compareResult)
+      jest.doMock('bcryptjs', () => ({ compare }))
+
+      const { getAuthOptions } = require('@/lib/auth')
+      const authorize = (getAuthOptions().providers[0] as any).authorize
+      return { authorize, compare }
+    }
+
+    it('should return null when email is missing', async () => {
+      const { authorize } = setupAuthorize(true)
+      const result = await authorize({ email: '', password: 'test' })
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null when password is missing', async () => {
+      const { authorize } = setupAuthorize(true)
+      const result = await authorize({ email: 'admin@test.com', password: '' })
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null when admin credentials are not configured', async () => {
+      const { authorize } = setupAuthorize(true)
+      delete process.env.ADMIN_EMAIL
+
+      const result = await authorize({ email: 'admin@test.com', password: 'test' })
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null when email does not match admin', async () => {
+      const { authorize } = setupAuthorize(true)
+      const result = await authorize({ email: 'wrong@test.com', password: 'test' })
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null when password is invalid', async () => {
+      const { authorize } = setupAuthorize(false)
+      const result = await authorize({ email: 'admin@test.com', password: 'test' })
+
+      expect(result).toBeNull()
+    })
+
+    it('should return user when credentials are valid', async () => {
+      const { authorize } = setupAuthorize(true)
+      const result = await authorize({ email: 'admin@test.com', password: 'test' })
+
+      expect(result).toMatchObject({
+        email: 'admin@test.com',
+        role: 'admin',
+      })
+    })
+  })
+
   describe('JWT callback', () => {
     let jwtCallback: any
 

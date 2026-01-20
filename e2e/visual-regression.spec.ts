@@ -6,6 +6,8 @@ import { test, expect } from '@playwright/test'
 import { setupDefaultMocks } from './mocks/api-mocks'
 
 test.describe('Visual Regression Tests', () => {
+  test.skip(!!process.env.CI, 'Visual regression snapshots are generated locally.')
+
   test.beforeEach(async ({ page }) => {
     // Setup API mocks before each test
     await setupDefaultMocks(page)

@@ -40,6 +40,25 @@ describe('ChatClient', () => {
     it('should initialize with environment variables', () => {
       expect(() => new ChatClient()).not.toThrow()
     })
+
+    it('should throw when API configuration is missing', () => {
+      const originalUrl = process.env.NEXT_PUBLIC_N8N_CHAT_WEBHOOK_URL
+      const originalKey = process.env.NEXT_PUBLIC_N8N_CHAT_API_KEY
+
+      process.env.NEXT_PUBLIC_N8N_CHAT_WEBHOOK_URL = ''
+      process.env.NEXT_PUBLIC_N8N_CHAT_API_KEY = ''
+
+      expect(() => new ChatClient()).toThrow('Chat API configuration missing')
+
+      process.env.NEXT_PUBLIC_N8N_CHAT_WEBHOOK_URL = originalUrl
+      process.env.NEXT_PUBLIC_N8N_CHAT_API_KEY = originalKey
+    })
+
+    it('should expose singleton instance', () => {
+      const module = require('@/lib/chat-client')
+
+      expect(module.chatClient).toBeInstanceOf(ChatClient)
+    })
   })
 
   describe('sendMessage', () => {
@@ -224,6 +243,21 @@ describe('ChatClient', () => {
         ).rejects.toThrow('Rate limit exceeded. Try again in 120 seconds.')
       })
 
+      it('should default retryAfter to 60 seconds when missing', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          json: async () => ({
+            error: 'Rate limit exceeded',
+            timestamp: '2026-01-14T12:00:00Z',
+          }),
+        } as Response)
+
+        await expect(
+          client.sendMessage('Hello', 'session-123')
+        ).rejects.toThrow('Rate limit exceeded. Try again in 60 seconds.')
+      })
+
       it('should handle 401 authentication error', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: false,
@@ -252,6 +286,18 @@ describe('ChatClient', () => {
         ).rejects.toThrow('Message contains profanity')
       })
 
+      it('should handle 400 bad request without error detail', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: async () => ({}),
+        } as Response)
+
+        await expect(
+          client.sendMessage('Hello', 'session-123')
+        ).rejects.toThrow('Invalid request')
+      })
+
       it('should handle 500 server error', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: false,
@@ -264,6 +310,18 @@ describe('ChatClient', () => {
         await expect(
           client.sendMessage('Hello', 'session-123')
         ).rejects.toThrow('Internal server error')
+      })
+
+      it('should handle server error without message', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: async () => ({}),
+        } as Response)
+
+        await expect(
+          client.sendMessage('Hello', 'session-123')
+        ).rejects.toThrow('Chat service unavailable')
       })
 
       it('should handle network error', async () => {

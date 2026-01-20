@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
   try {
     // Get date range from query params (default to next 60 days)
     const searchParams = request.nextUrl.searchParams;
-    const start = searchParams.get('start');
-    const end = searchParams.get('end');
-    const timezone = searchParams.get('timezone');
+    const start = searchParams.get('start') ?? undefined;
+    const end = searchParams.get('end') ?? undefined;
+    const timezone = searchParams.get('timezone') ?? undefined;
 
     // Validate query parameters
     const validation = bookingQuerySchema.safeParse({ start, end, timezone });

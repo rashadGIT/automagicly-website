@@ -119,10 +119,11 @@ export default function Referrals() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="referral-your-name" className="block text-sm font-semibold text-gray-700 mb-2">
                       Your Name *
                     </label>
                     <input
+                      id="referral-your-name"
                       type="text"
                       required
                       value={formData.yourName}
@@ -132,10 +133,11 @@ export default function Referrals() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="referral-your-email" className="block text-sm font-semibold text-gray-700 mb-2">
                       Your Email *
                     </label>
                     <input
+                      id="referral-your-email"
                       type="email"
                       required
                       value={formData.yourEmail}
@@ -152,10 +154,11 @@ export default function Referrals() {
 
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label htmlFor="referral-name" className="block text-sm font-semibold text-gray-700 mb-2">
                         Referral Name *
                       </label>
                       <input
+                        id="referral-name"
                         type="text"
                         required
                         value={formData.referralName}
@@ -165,10 +168,11 @@ export default function Referrals() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label htmlFor="referral-contact" className="block text-sm font-semibold text-gray-700 mb-2">
                         Referral Email or Phone *
                       </label>
                       <input
+                        id="referral-contact"
                         type="text"
                         required
                         value={formData.referralContact}
@@ -179,10 +183,11 @@ export default function Referrals() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label htmlFor="referral-company" className="block text-sm font-semibold text-gray-700 mb-2">
                         Referral Company (optional)
                       </label>
                       <input
+                        id="referral-company"
                         type="text"
                         value={formData.referralCompany}
                         onChange={(e) => setFormData(prev => ({ ...prev, referralCompany: e.target.value }))}
@@ -191,10 +196,11 @@ export default function Referrals() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label htmlFor="referral-help-needed" className="block text-sm font-semibold text-gray-700 mb-2">
                         What do they need help with? *
                       </label>
                       <textarea
+                        id="referral-help-needed"
                         required
                         rows={4}
                         value={formData.helpNeeded}

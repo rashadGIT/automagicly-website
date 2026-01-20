@@ -249,4 +249,24 @@ describe('sanitize', () => {
       expect(result).toContain('test')
     })
   })
+
+  describe('module initialization paths', () => {
+    const originalWindow = (global as any).window
+
+    afterEach(() => {
+      ;(global as any).window = originalWindow
+      jest.resetModules()
+      jest.dontMock('isomorphic-dompurify')
+    })
+
+    it('should use DOMPurify default and fallback to HTML encoding when sanitize is missing', async () => {
+      jest.resetModules()
+      jest.doMock('isomorphic-dompurify', () => ({ default: {} }))
+
+      const { sanitizeHtmlAsync } = require('@/lib/sanitize')
+      const result = await sanitizeHtmlAsync('<b>bold</b>')
+
+      expect(result).toContain('&lt;b&gt;')
+    })
+  })
 })

@@ -132,10 +132,11 @@ export default function ROICalculator() {
 
             {/* Time per task */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="time-per-task" className="block text-sm font-semibold text-gray-700 mb-2">
                 Time per Task (minutes): <span className="text-brand-600">{timePerTask}</span>
               </label>
               <input
+                id="time-per-task"
                 type="range"
                 min="1"
                 max="120"
@@ -147,10 +148,11 @@ export default function ROICalculator() {
 
             {/* Times per week */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="times-per-week" className="block text-sm font-semibold text-gray-700 mb-2">
                 Times per Week: <span className="text-brand-600">{timesPerWeek}</span>
               </label>
               <input
+                id="times-per-week"
                 type="range"
                 min="1"
                 max="100"
@@ -162,10 +164,11 @@ export default function ROICalculator() {
 
             {/* Number of people */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="number-of-people" className="block text-sm font-semibold text-gray-700 mb-2">
                 Number of People: <span className="text-brand-600">{numberOfPeople}</span>
               </label>
               <input
+                id="number-of-people"
                 type="range"
                 min="1"
                 max="20"
@@ -177,10 +180,11 @@ export default function ROICalculator() {
 
             {/* Hourly cost */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="hourly-cost" className="block text-sm font-semibold text-gray-700 mb-2">
                 Hourly Cost ($): <span className="text-brand-600">{hourlyCost}</span>
               </label>
               <input
+                id="hourly-cost"
                 type="range"
                 min="15"
                 max="200"
@@ -193,10 +197,11 @@ export default function ROICalculator() {
 
             {/* Efficiency gain */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="efficiency-gain" className="block text-sm font-semibold text-gray-700 mb-2">
                 Efficiency Gain (%): <span className="text-brand-600">{efficiencyGain}</span>
               </label>
               <input
+                id="efficiency-gain"
                 type="range"
                 min="20"
                 max="95"

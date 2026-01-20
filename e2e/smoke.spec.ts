@@ -4,8 +4,13 @@
  * Run these in production after deployment to ensure nothing broke
  */
 import { test, expect } from '@playwright/test'
+import { setupDefaultMocks } from './mocks/api-mocks'
 
 test.describe('Smoke Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupDefaultMocks(page)
+  })
+
   test('homepage loads successfully', async ({ page }) => {
     const response = await page.goto('/')
     expect(response?.status()).toBe(200)

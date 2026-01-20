@@ -256,4 +256,48 @@ describe('logger', () => {
       expect(console.warn).toHaveBeenCalled()
     })
   })
+
+  describe('development formatting', () => {
+    const originalEnv = process.env.NODE_ENV
+
+    beforeEach(() => {
+      process.env.NODE_ENV = 'development'
+      jest.resetModules()
+      jest.spyOn(console, 'log').mockImplementation(() => {})
+      jest.spyOn(console, 'warn').mockImplementation(() => {})
+      jest.spyOn(console, 'error').mockImplementation(() => {})
+      jest.spyOn(console, 'debug').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv
+      jest.restoreAllMocks()
+    })
+
+    it('should pretty-print context and error stack in development', () => {
+      const { logger: devLogger } = require('@/lib/logger')
+      const error = new Error('Dev stack error')
+      error.stack = 'stack-trace'
+
+      devLogger.error('Dev error', { contextKey: 'value' }, error)
+
+      const errorCall = (console.error as jest.Mock).mock.calls[0][0]
+      expect(errorCall).toContain('Context')
+      expect(errorCall).toContain('Stack')
+    })
+
+    it('should log debug output in development', () => {
+      const { logger: devLogger } = require('@/lib/logger')
+
+      devLogger.debug('Debug message')
+
+      expect(console.debug).toHaveBeenCalled()
+    })
+
+    it('should export default logger', () => {
+      const devModule = require('@/lib/logger')
+
+      expect(devModule.default).toBeDefined()
+    })
+  })
 })
