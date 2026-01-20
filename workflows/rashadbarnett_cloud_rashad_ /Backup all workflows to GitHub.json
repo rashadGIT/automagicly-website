@@ -1,0 +1,367 @@
+{
+  "id": "dd9ZEt24TyzeCt0A",
+  "name": "Backup all workflows to GitHub",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyHour",
+              "minute": 59
+            }
+          ]
+        }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://rashadbarnett.app.n8n.cloud/api/v1/workflows",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNDUyNDllYi03YWVlLTQyZjUtODFhZi1lNGM5M2EwZDdjNDEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3NzQ5NDgxfQ.Kn-FK8JSwoWaQkq9rhkzVYdAl9JdCNHHZ47h7WM8Jnw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "List Workflows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        256
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = items[0].json.data || [];\nreturn data.map(wf => ({ json: wf }));"
+      },
+      "name": "Extract Workflows",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        464,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ \"https://rashadbarnett.app.n8n.cloud/api/v1/workflows/\" + $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNDUyNDllYi03YWVlLTQyZjUtODFhZi1lNGM5M2EwZDdjNDEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3NzQ5NDgxfQ.Kn-FK8JSwoWaQkq9rhkzVYdAl9JdCNHHZ47h7WM8Jnw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Get Workflow JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const wf = items[0].json;\nconst safeName = (wf.name || 'workflow').split(' ').join('_');\n\n// Extract only essential fields for backup\nconst essentialWorkflow = {\n  id: wf.id,\n  name: wf.name,\n  active: wf.active,\n  nodes: wf.nodes,\n  connections: wf.connections,\n  settings: wf.settings,\n  staticData: wf.staticData,\n  tags: wf.tags,\n  // Keep these for reference but they won't cause false changes\n  createdAt: wf.createdAt,\n  description: wf.description\n};\n\nreturn [\n  {\n    json: {\n      path: 'workflows/' + wf.id + '-' + safeName + '.json',\n      content: JSON.stringify(essentialWorkflow, null, 2),\n    },\n  },\n];\n"
+      },
+      "name": "Format JSON File",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        912,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ \"https://api.github.com/repos/rashadGIT/n8n-workflows/contents/\" + $json.path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.githubBody) }}",
+        "options": {}
+      },
+      "name": "GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        256
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "ogGBMxrbdHqFiCRO",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ \"https://api.github.com/repos/rashadGIT/n8n-workflows/contents/\" + $json.path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "name": "Get File SHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1136,
+        256
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "ogGBMxrbdHqFiCRO",
+          "name": "GitHub account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "const changeData = $input.item.json;\nconst body = {\n  message: \"n8n backup: \" + changeData.path,\n  content: Buffer.from(changeData.content).toString(\"base64\")\n};\n\nif (changeData.sha) {\n  body.sha = changeData.sha;\n}\n\nreturn {\n  json: {\n    path: changeData.path,\n    githubBody: body\n  }\n};\n"
+      },
+      "name": "Prepare GitHub Body",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get merged data from previous node\nconst data = $input.item.json;\n\n// Helper function to create a stable hash/signature of workflow\nfunction createWorkflowSignature(workflowJSON) {\n  // Extract truly essential fields - the ACTUAL workflow logic\n  const signature = {\n    name: workflowJSON.name,\n    active: workflowJSON.active,\n\n    // For nodes, we need to be more careful about what we include\n    nodes: workflowJSON.nodes ? workflowJSON.nodes.map(node => ({\n      id: node.id,\n      name: node.name,\n      type: node.type,\n      typeVersion: node.typeVersion,\n      position: node.position,\n      parameters: node.parameters,\n      // Exclude things like disabled, notesInFlow, etc. that might change\n    })) : [],\n\n    connections: workflowJSON.connections || {},\n    settings: workflowJSON.settings || {},\n    staticData: workflowJSON.staticData || null,\n    tags: workflowJSON.tags || []\n  };\n\n  // Sort keys recursively to ensure consistent comparison\n  return JSON.stringify(signature, Object.keys(signature).sort());\n}\n\n// Check if file exists in GitHub\nif (!data.existingSha || !data.existingContent) {\n  // File doesn't exist - this is a new file, proceed\n  return {\n    json: {\n      path: data.path,\n      content: data.newContent,\n      sha: null,\n      isNew: true,\n      hasChanges: true,\n      debugInfo: \"New file - no comparison needed\"\n    }\n  };\n}\n\n// File exists - compare content\nconst existingContent = Buffer.from(data.existingContent, 'base64').toString('utf8');\nconst newContent = data.newContent;\n\nlet hasChanges = true;\nlet debugInfo = \"\";\n\ntry {\n  const existingJSON = JSON.parse(existingContent);\n  const newJSON = JSON.parse(newContent);\n\n  // Create signatures for comparison\n  const existingSig = createWorkflowSignature(existingJSON);\n  const newSig = createWorkflowSignature(newJSON);\n\n  if (existingSig === newSig) {\n    hasChanges = false;\n    debugInfo = \"No changes detected - signatures match\";\n  } else {\n    hasChanges = true;\n    // Find what changed\n    const existingObj = JSON.parse(existingSig);\n    const newObj = JSON.parse(newSig);\n\n    const diffs = [];\n    if (existingObj.name !== newObj.name) diffs.push(\"name\");\n    if (existingObj.active !== newObj.active) diffs.push(\"active\");\n    if (JSON.stringify(existingObj.nodes) !== JSON.stringify(newObj.nodes)) diffs.push(\"nodes\");\n    if (JSON.stringify(existingObj.connections) !== JSON.stringify(newObj.connections)) diffs.push(\"connections\");\n    if (JSON.stringify(existingObj.settings) !== JSON.stringify(newObj.settings)) diffs.push(\"settings\");\n    if (JSON.stringify(existingObj.staticData) !== JSON.stringify(newObj.staticData)) diffs.push(\"staticData\");\n    if (JSON.stringify(existingObj.tags) !== JSON.stringify(newObj.tags)) diffs.push(\"tags\");\n\n    debugInfo = \"Changes detected in: \" + diffs.join(\", \");\n  }\n} catch (e) {\n  hasChanges = true;\n  debugInfo = \"Error comparing: \" + e.message;\n}\n\n// Always return an item with hasChanges flag\nreturn {\n  json: {\n    path: data.path,\n    content: data.newContent,\n    sha: data.existingSha,\n    isNew: false,\n    hasChanges: hasChanges,\n    debugInfo: debugInfo\n  }\n};\n"
+      },
+      "name": "Detect Changes",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get data from Format JSON File (previous node's input)\nconst formatData = $items(\"Format JSON File\")[0].json;\n\n// Get data from Get File SHA (current input)\nconst githubData = $input.item.json;\n\n// Merge both datasets\nreturn {\n  json: {\n    // From Format JSON File\n    path: formatData.path,\n    newContent: formatData.content,\n\n    // From Get File SHA (if file exists)\n    existingSha: githubData && githubData.sha ? githubData.sha : null,\n    existingContent: githubData && githubData.content ? githubData.content : null\n  }\n};\n"
+      },
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log debug info and ensure hasChanges is a proper boolean\nconst item = $input.item.json;\n\n// Ensure hasChanges is a boolean, not a string\nconst hasChanges = item.hasChanges === true || item.hasChanges === \"true\";\n\nconsole.log(\"[DEBUG] Workflow:\", item.path);\nconsole.log(\"[DEBUG] Has Changes:\", hasChanges, \"(type:\", typeof hasChanges, \")\");\nconsole.log(\"[DEBUG] Info:\", item.debugInfo);\nconsole.log(\"---\");\n\n// Return with properly typed hasChanges\nreturn {\n  json: {\n    ...item,\n    hasChanges: hasChanges  // Ensure it's a boolean\n  }\n};\n"
+      },
+      "name": "Debug Logger",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.hasChanges}}",
+              "value2": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Filter Unchanged",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        256
+      ]
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "List Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Workflows": {
+      "main": [
+        [
+          {
+            "node": "Extract Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Workflows": {
+      "main": [
+        [
+          {
+            "node": "Get Workflow JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Workflow JSON": {
+      "main": [
+        [
+          {
+            "node": "Format JSON File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format JSON File": {
+      "main": [
+        [
+          {
+            "node": "Get File SHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub": {
+      "main": [
+        []
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File SHA": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare GitHub Body": {
+      "main": [
+        [
+          {
+            "node": "GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Changes": {
+      "main": [
+        [
+          {
+            "node": "Debug Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Detect Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Unchanged": {
+      "main": [
+        [
+          {
+            "node": "Prepare GitHub Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debug Logger": {
+      "main": [
+        [
+          {
+            "node": "Filter Unchanged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false
+}
