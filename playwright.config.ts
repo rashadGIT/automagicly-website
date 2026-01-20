@@ -82,5 +82,30 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_SUPABASE_URL:
+        process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY:
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
+      NEXT_PUBLIC_SITE_URL:
+        process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      NEXTAUTH_SECRET:
+        process.env.NEXTAUTH_SECRET || 'test-secret-for-playwright-32chars',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'test@example.com',
+      ADMIN_PASSWORD_HASH:
+        process.env.ADMIN_PASSWORD_HASH || '$2a$10$test.hash.for.playwright',
+      DB_ACCESS_KEY_ID: process.env.DB_ACCESS_KEY_ID || 'test-key',
+      DB_SECRET_ACCESS_KEY: process.env.DB_SECRET_ACCESS_KEY || 'test-secret',
+      GOOGLE_SERVICE_ACCOUNT_EMAIL:
+        process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+        'test@test.iam.gserviceaccount.com',
+      GOOGLE_PRIVATE_KEY:
+        process.env.GOOGLE_PRIVATE_KEY ||
+        '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----',
+      GOOGLE_CALENDAR_ID:
+        process.env.GOOGLE_CALENDAR_ID || 'test@group.calendar.google.com',
+    },
   },
 });
