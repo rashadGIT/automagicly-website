@@ -4,6 +4,13 @@
  */
 import { test, expect } from '@playwright/test';
 
+const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const csrfHeaders = {
+  origin: baseUrl,
+  referer: baseUrl,
+};
+const jsonHeaders = { ...csrfHeaders, 'Content-Type': 'application/json' };
+
 test.describe('API Routes', () => {
   test.describe('Chat API - /api/chat', () => {
     const chatEndpoint = '/api/chat';
@@ -11,7 +18,7 @@ test.describe('API Routes', () => {
     test('should reject requests without Content-Type header', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: { message: 'Hello', sessionId: 'test-session' },
-        headers: {},
+        headers: csrfHeaders,
       });
 
       expect(response.status()).toBe(400);
@@ -22,7 +29,7 @@ test.describe('API Routes', () => {
     test('should reject requests with invalid Content-Type', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: 'message=hello',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { ...csrfHeaders, 'Content-Type': 'text/plain' },
       });
 
       expect(response.status()).toBe(400);
@@ -33,7 +40,7 @@ test.describe('API Routes', () => {
     test('should reject requests with missing message', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: { sessionId: 'test-session' },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
 
       expect(response.status()).toBe(400);
@@ -44,7 +51,7 @@ test.describe('API Routes', () => {
     test('should reject requests with missing sessionId', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: { message: 'Hello' },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
 
       expect(response.status()).toBe(400);
@@ -56,7 +63,7 @@ test.describe('API Routes', () => {
       const longMessage = 'a'.repeat(5001);
       const response = await request.post(chatEndpoint, {
         data: { message: longMessage, sessionId: 'test-session' },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
 
       expect(response.status()).toBe(400);
@@ -67,7 +74,7 @@ test.describe('API Routes', () => {
     test('should accept valid chat message and return response', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: { message: 'What services do you offer?', sessionId: `test-${Date.now()}` },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
 
       // Should get 200 or the fallback response
@@ -84,7 +91,7 @@ test.describe('API Routes', () => {
     test('should block pricing requests with appropriate message', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: { message: 'How much does it cost?', sessionId: `test-${Date.now()}` },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
 
       // Skip CSRF failures - this tests the pricing guard functionality
@@ -103,7 +110,7 @@ test.describe('API Routes', () => {
     test('should block profanity', async ({ request }) => {
       const response = await request.post(chatEndpoint, {
         data: { message: 'This is a damn test', sessionId: `test-${Date.now()}` },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
 
       // Skip CSRF failures
@@ -237,7 +244,7 @@ test.describe('API Security', () => {
   test('should handle malformed JSON gracefully', async ({ request }) => {
     const response = await request.post('/api/chat', {
       data: 'not valid json{',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
 
     // Should return error status, not crash
@@ -247,7 +254,7 @@ test.describe('API Security', () => {
   test('should handle empty request body', async ({ request }) => {
     const response = await request.post('/api/chat', {
       data: {},
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
 
     expect(response.status()).toBe(400);
@@ -256,7 +263,7 @@ test.describe('API Security', () => {
   test('API routes should not expose stack traces', async ({ request }) => {
     const response = await request.post('/api/chat', {
       data: 'invalid',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
 
     const text = await response.text();
@@ -275,7 +282,7 @@ test.describe('Rate Limiting', () => {
     for (let i = 0; i < 15; i++) {
       const response = await request.post('/api/chat', {
         data: { message: 'Test message', sessionId },
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
       responses.push(response.status());
     }

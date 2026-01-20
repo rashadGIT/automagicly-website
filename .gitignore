@@ -42,3 +42,4 @@ next-env.d.ts
 
 .vscode/
 n8n-as-code-instance.json
+.tmp/
