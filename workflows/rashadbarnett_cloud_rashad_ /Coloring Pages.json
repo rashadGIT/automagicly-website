@@ -1,0 +1,117 @@
+{
+  "id": "3h9l7htubUjXkyxh",
+  "name": "Coloring Pages",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        912
+      ],
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "bucketName": "ai-book-image-storage",
+        "fileKey": "={{ $json.Key }}"
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        656,
+        912
+      ],
+      "name": "Download a file",
+      "credentials": {
+        "s3": {
+          "id": "uLl30qp4lBJgjjbM",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "bucketName": "ai-book-image-storage",
+        "returnAll": true,
+        "options": {
+          "folderKey": "content/originals/CHILDREN/ANGELS/"
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        208,
+        912
+      ],
+      "name": "Get many files",
+      "credentials": {
+        "s3": {
+          "id": "uLl30qp4lBJgjjbM",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\n\n// Select a random item\nconst randomIndex = Math.floor(Math.random() * items.length);\nconst randomItem = items[randomIndex];\n\n// Return the random item\nreturn [randomItem];"
+      },
+      "name": "Pick Random File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        912
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many files": {
+      "main": [
+        [
+          {
+            "node": "Pick Random File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Random File": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false
+}
