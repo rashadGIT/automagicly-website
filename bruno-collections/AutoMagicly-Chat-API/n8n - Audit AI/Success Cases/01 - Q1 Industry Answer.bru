@@ -1,0 +1,56 @@
+meta {
+  name: 01 - Q1 Industry Answer
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-test-001",
+    "message": "Healthcare - I run a small medical practice",
+    "questionNumber": 1,
+    "state": "DISCOVERY",
+    "conversationHistory": [],
+    "currentConfidence": {
+      "I": 0,
+      "R": 0,
+      "P": 0,
+      "M": 0,
+      "K": 0
+    }
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has nextQuestion", function() {
+    expect(res.body).to.have.property('nextQuestion');
+  });
+
+  test("Response has updatedConfidence", function() {
+    expect(res.body).to.have.property('updatedConfidence');
+  });
+
+  test("Industry confidence increased", function() {
+    expect(res.body.updatedConfidence.I).to.be.greaterThan(0);
+  });
+
+  test("Response has suggestedResponses array", function() {
+    expect(res.body).to.have.property('suggestedResponses');
+    expect(res.body.suggestedResponses).to.be.an('array');
+  });
+}

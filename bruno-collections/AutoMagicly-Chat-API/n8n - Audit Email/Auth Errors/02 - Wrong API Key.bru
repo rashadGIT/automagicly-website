@@ -1,0 +1,40 @@
+meta {
+  name: 02 - Wrong API Key
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/webhook-test/audit-email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: invalid-api-key-12345
+}
+
+body:json {
+  {
+    "sessionId": "bruno-email-test-auth-002",
+    "email": "test@example.com",
+    "name": "Test User",
+    "painPoints": [],
+    "recommendations": [],
+    "source": "automagicly-website-audit-email",
+    "sentAt": "2026-01-25T12:00:00.000Z"
+  }
+}
+
+docs {
+  Tests that the webhook rejects requests with an invalid API key.
+
+  Expected: 401 Unauthorized or 403 Forbidden
+}
+
+tests {
+  test("Status is 401 or 403", function() {
+    expect([401, 403]).to.include(res.status);
+  });
+}

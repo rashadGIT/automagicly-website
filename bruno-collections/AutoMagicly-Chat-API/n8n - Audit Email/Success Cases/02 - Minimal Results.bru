@@ -1,0 +1,53 @@
+meta {
+  name: 02 - Minimal Results
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/webhook-test/audit-email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-email-test-002",
+    "email": "rashad.barnett@gmail.com",
+    "name": "Bruno Minimal Test",
+    "painPoints": [],
+    "recommendations": [
+      {
+        "title": "Basic Automation Assessment",
+        "description": "Based on your responses, we recommend a detailed discovery call to better understand your specific needs.",
+        "complexity": "low",
+        "priority": 1
+      }
+    ],
+    "nextSteps": "Let's schedule a call to discuss your automation opportunities in more detail.",
+    "source": "automagicly-website-audit-email",
+    "sentAt": "2026-01-25T12:00:00.000Z"
+  }
+}
+
+docs {
+  Tests sending an email with minimal content (empty pain points, single recommendation).
+
+  This tests the edge case where the audit didn't identify specific pain points.
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has success flag", function() {
+    expect(res.body).to.have.property('success');
+    expect(res.body.success).to.be.true;
+  });
+}

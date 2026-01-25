@@ -1,0 +1,20 @@
+meta {
+  name: 01 - Auth Session
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{auditBaseUrl}}/api/auth/session
+  auth: none
+}
+
+headers {
+  Origin: {{auditBaseUrl}}
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,48 @@
+meta {
+  name: 01 - Rate Limiting
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{auditBaseUrl}}/api/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "message": "Test rate limit",
+    "sessionId": "rate-limit-test-001"
+  }
+}
+
+docs {
+  # Rate Limiting Test
+
+  Run this request 30+ times quickly to trigger rate limiting.
+
+  - Initial requests should return 200 OK
+  - After hitting the limit, should return 429 Too Many Requests
+
+  Use the "Run Multiple Times" feature or Bruno CLI to automate this.
+}
+
+tests {
+  test("Status is 200 or 429", function() {
+    expect([200, 429]).to.include(res.status);
+  });
+
+  test("If rate limited, has blocked reason", function() {
+    if (res.status === 429) {
+      expect(res.body).to.have.property('blocked');
+      expect(res.body.blocked).to.be.true;
+      expect(res.body.reason).to.include('rate');
+    }
+  });
+}

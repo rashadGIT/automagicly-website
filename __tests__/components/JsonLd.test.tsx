@@ -12,6 +12,27 @@ import JsonLd, {
   WebSiteJsonLd,
 } from '@/components/JsonLd';
 
+// Mock next/script to render as a regular script tag for testing
+jest.mock('next/script', () => {
+  return function MockScript({
+    id,
+    type,
+    dangerouslySetInnerHTML,
+  }: {
+    id: string;
+    type: string;
+    dangerouslySetInnerHTML: { __html: string };
+  }) {
+    return (
+      <script
+        id={id}
+        type={type}
+        dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+      />
+    );
+  };
+});
+
 describe('JsonLd Components', () => {
   const getJsonLdContent = (container: HTMLElement): object | null => {
     const script = container.querySelector('script[type="application/ld+json"]');

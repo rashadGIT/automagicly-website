@@ -1,0 +1,25 @@
+meta {
+  name: 01 - Reviews Simple Unauthorized
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{auditBaseUrl}}/api/reviews-simple
+  auth: none
+}
+
+headers {
+  Origin: {{auditBaseUrl}}
+}
+
+tests {
+  test("Status is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  
+  test("Response has unauthorized error", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error).to.include('authentication');
+  });
+}

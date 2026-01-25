@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import WhatWeDo from '@/components/WhatWeDo';
+import AuditSection from '@/components/AuditSection';
 import ROICalculator from '@/components/ROICalculator';
 import ExampleAutomations from '@/components/ExampleAutomations';
 import Services from '@/components/Services';
@@ -24,6 +25,7 @@ export default function Home() {
       <Header />
       <Hero />
       <WhatWeDo />
+      <AuditSection />
       <ROICalculator />
       <ExampleAutomations />
       <Services />

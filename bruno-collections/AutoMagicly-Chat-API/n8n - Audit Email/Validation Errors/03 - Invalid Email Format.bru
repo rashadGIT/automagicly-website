@@ -1,0 +1,41 @@
+meta {
+  name: 03 - Invalid Email Format
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/webhook-test/audit-email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-email-test-validation-003",
+    "email": "not-a-valid-email",
+    "name": "Test User",
+    "painPoints": [],
+    "recommendations": [],
+    "source": "automagicly-website-audit-email",
+    "sentAt": "2026-01-25T12:00:00.000Z"
+  }
+}
+
+docs {
+  Tests that the workflow handles invalid email formats.
+
+  Note: Gmail may reject this during send, or n8n validation may catch it.
+}
+
+tests {
+  test("Status is 200 or 400 or 500", function() {
+    // Could be 400 (validation), 500 (Gmail error), or 200 if not validated
+    expect([200, 400, 500]).to.include(res.status);
+  });
+}

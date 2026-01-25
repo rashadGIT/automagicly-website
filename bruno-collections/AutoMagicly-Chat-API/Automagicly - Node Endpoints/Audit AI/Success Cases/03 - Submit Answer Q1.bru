@@ -1,0 +1,42 @@
+meta {
+  name: 03 - Submit Answer Q1
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/message
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "sessionId": "{{auditSessionId}}",
+    "message": "Healthcare - I run a small medical practice"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has next question or completion", function() {
+    const hasQuestion = res.body.hasOwnProperty('question');
+    const isComplete = res.body.state === 'COMPLETE';
+    const isEscalated = res.body.state === 'ESCALATED';
+    expect(hasQuestion || isComplete || isEscalated).to.be.true;
+  });
+  
+  test("Question number incremented", function() {
+    if (res.body.questionNumber) {
+      expect(res.body.questionNumber).to.equal(2);
+    }
+  });
+}

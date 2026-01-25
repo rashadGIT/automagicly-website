@@ -1,0 +1,29 @@
+meta {
+  name: 02 - Invalid Timezone
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{auditBaseUrl}}/api/calendar/availability?start=2026-01-01&end=2026-02-01&timezone=Invalid/Timezone
+  auth: none
+}
+
+headers {
+  Origin: {{auditBaseUrl}}
+}
+
+docs {
+  Tests that invalid timezones are rejected.
+  Expected: 400 status with validation error details
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+
+  test("Response has error", function() {
+    expect(res.body).to.have.property('error');
+  });
+}

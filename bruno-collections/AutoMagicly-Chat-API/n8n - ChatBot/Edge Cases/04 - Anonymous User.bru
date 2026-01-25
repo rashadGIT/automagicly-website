@@ -1,0 +1,50 @@
+meta {
+  name: 04 - Anonymous User
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "Can you help me automate my business processes?",
+    "sessionId": "test-anon-001"
+  }
+}
+
+docs {
+  Tests that the chatbot works without a userEmail.
+  Anonymous users should still get helpful responses.
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has reply", function() {
+    expect(res.body).to.have.property('reply');
+    expect(res.body.reply).to.be.a('string');
+    expect(res.body.reply.length).to.be.greaterThan(0);
+  });
+
+  test("Response has sessionId", function() {
+    expect(res.body).to.have.property('sessionId');
+    expect(res.body.sessionId).to.equal('test-anon-001');
+  });
+
+  test("Chat works without userEmail", function() {
+    // If we got here with 200 status, anonymous chat is working
+    expect(res.status).to.equal(200);
+  });
+}

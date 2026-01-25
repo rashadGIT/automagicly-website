@@ -1,0 +1,31 @@
+meta {
+  name: 04 - Invalid Content Type
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/message
+  body: text
+  auth: none
+}
+
+headers {
+  Content-Type: text/plain
+  Origin: {{auditBaseUrl}}
+}
+
+body:text {
+  This is plain text, not JSON
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Response has error about content type", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error).to.include('Content-Type');
+  });
+}

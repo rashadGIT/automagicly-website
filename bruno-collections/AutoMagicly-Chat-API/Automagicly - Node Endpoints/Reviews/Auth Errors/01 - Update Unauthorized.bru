@@ -1,0 +1,34 @@
+meta {
+  name: 01 - Update Unauthorized
+  type: http
+  seq: 1
+}
+
+patch {
+  url: {{auditBaseUrl}}/api/reviews
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "id": "review-1234567890-1",
+    "status": "approved"
+  }
+}
+
+tests {
+  test("Status is 403", function() {
+    expect(res.status).to.equal(403);
+  });
+  
+  test("Response has unauthorized error", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error).to.include('admin access');
+  });
+}

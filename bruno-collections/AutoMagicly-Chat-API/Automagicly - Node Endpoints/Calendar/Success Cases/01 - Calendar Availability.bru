@@ -1,0 +1,24 @@
+meta {
+  name: 01 - Calendar Availability
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{auditBaseUrl}}/api/calendar/availability?start=2026-01-01&end=2026-02-01&timezone=America/New_York
+  auth: none
+}
+
+headers {
+  Origin: {{auditBaseUrl}}
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has busyDates", function() {
+    expect(res.body).to.have.property('busyDates');
+  });
+}

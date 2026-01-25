@@ -1,0 +1,54 @@
+meta {
+  name: 04 - Pricing Question
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "How much do your services cost? What is your pricing?",
+    "sessionId": "test-pricing-001",
+    "userEmail": "budget@company.com"
+  }
+}
+
+docs {
+  Tests the chatbot's handling of pricing questions.
+  Should retrieve pricing information from FAQ or provide
+  guidance on how to get a quote.
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has reply", function() {
+    expect(res.body).to.have.property('reply');
+    expect(res.body.reply).to.be.a('string');
+  });
+
+  test("Reply addresses pricing", function() {
+    const reply = res.body.reply.toLowerCase();
+    // Check for pricing-related content
+    const hasPricingInfo = reply.includes('pric') ||
+                           reply.includes('cost') ||
+                           reply.includes('quote') ||
+                           reply.includes('custom') ||
+                           reply.includes('depend') ||
+                           reply.includes('consult') ||
+                           reply.includes('discuss');
+    expect(hasPricingInfo).to.be.true;
+  });
+}

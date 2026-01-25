@@ -1,0 +1,98 @@
+meta {
+  name: 01 - Send Full Results
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook-test/audit-email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-email-test-001",
+    "email": "rashad.barnett@gmail.com",
+    "name": "Bruno Test User",
+    "painPoints": [
+      {
+        "category": "data-entry",
+        "description": "Spending 10+ hours per week on manual data entry between systems",
+        "severity": "high"
+      },
+      {
+        "category": "scheduling",
+        "description": "Double bookings happen frequently due to calendar sync issues",
+        "severity": "medium"
+      },
+      {
+        "category": "follow-up",
+        "description": "Leads often fall through the cracks without proper follow-up",
+        "severity": "high"
+      }
+    ],
+    "recommendations": [
+      {
+        "title": "Automate Data Entry with n8n",
+        "description": "Create automated workflows to sync data between your CRM, accounting software, and other tools. This eliminates manual copy-paste and reduces errors.",
+        "complexity": "medium",
+        "priority": 1,
+        "estimatedROI": "10+ hours saved per week"
+      },
+      {
+        "title": "Implement Calendar Integration",
+        "description": "Set up real-time calendar sync across platforms with automatic conflict detection and resolution.",
+        "complexity": "low",
+        "priority": 2,
+        "estimatedROI": "Eliminate double bookings"
+      },
+      {
+        "title": "Automated Lead Follow-up Sequences",
+        "description": "Create automated email and SMS sequences that trigger based on lead behavior, ensuring no lead is forgotten.",
+        "complexity": "medium",
+        "priority": 3,
+        "estimatedROI": "20% increase in conversion rate"
+      }
+    ],
+    "nextSteps": "Schedule a free 30-minute consultation to discuss which automation would have the biggest impact on your business.",
+    "source": "automagicly-website-audit-email",
+    "sentAt": "2026-01-25T12:00:00.000Z"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has success flag", function() {
+    expect(res.body).to.have.property('success');
+    expect(res.body.success).to.be.true;
+  });
+  
+  test("Response has message", function() {
+    expect(res.body).to.have.property('message');
+  });
+  
+  test("Response includes email", function() {
+    expect(res.body).to.have.property('email');
+  });
+}
+
+docs {
+  Tests sending a complete audit email with multiple pain points and recommendations.
+  
+  This will send an actual email to the specified address.
+  
+  Expected behavior:
+  - n8n receives the payload
+  - Formats HTML email with pain points and recommendations
+  - Sends email via Gmail
+  - Returns success response
+}

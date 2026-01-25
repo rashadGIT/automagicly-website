@@ -1,0 +1,61 @@
+meta {
+  name: 04 - Q4 Adaptive Question
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-test-001",
+    "message": "We use a basic EHR system and Excel for tracking. No automation currently - everything is manual.",
+    "questionNumber": 4,
+    "state": "ADAPTIVE",
+    "conversationHistory": [
+      {"role": "assistant", "content": "What industry do you work in?"},
+      {"role": "user", "content": "Healthcare - I run a small medical practice"},
+      {"role": "assistant", "content": "What does a typical workday look like for you right now?"},
+      {"role": "user", "content": "My typical day involves seeing patients, managing appointments, and handling insurance paperwork."},
+      {"role": "assistant", "content": "What's the biggest challenge or frustration in your current workflow?"},
+      {"role": "user", "content": "Patient scheduling - constant no-shows and double bookings. Also spending too much time on insurance claim follow-ups."}
+    ],
+    "currentConfidence": {
+      "I": 0.9,
+      "R": 0.7,
+      "P": 0.6,
+      "M": 0.3,
+      "K": 0.2
+    },
+    "derivedPainPoints": ["scheduling", "insurance_claims", "no_shows"]
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has nextQuestion or shouldStop", function() {
+    const hasQuestion = res.body.hasOwnProperty('nextQuestion') && res.body.nextQuestion !== null;
+    const shouldStop = res.body.shouldStop === true;
+    expect(hasQuestion || shouldStop).to.be.true;
+  });
+  
+  test("Response has updatedConfidence", function() {
+    expect(res.body).to.have.property('updatedConfidence');
+  });
+  
+  test("Knowledge confidence increased", function() {
+    expect(res.body.updatedConfidence.K).to.be.greaterThan(0.2);
+  });
+}

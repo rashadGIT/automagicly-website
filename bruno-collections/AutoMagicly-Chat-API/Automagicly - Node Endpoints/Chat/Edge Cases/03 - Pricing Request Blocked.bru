@@ -1,0 +1,46 @@
+meta {
+  name: 03 - Pricing Request Blocked
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{auditBaseUrl}}/api/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "message": "How much does it cost? What is your pricing?",
+    "sessionId": "pricing-test-001"
+  }
+}
+
+docs {
+  Tests that pricing requests are blocked and redirected to booking.
+  Expected: 200 status with blocked=true and reason='pricing_request'
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response blocked for pricing", function() {
+    expect(res.body).to.have.property('blocked');
+    expect(res.body.blocked).to.be.true;
+    expect(res.body.reason).to.equal('pricing_request');
+  });
+
+  test("Response suggests AI Audit", function() {
+    expect(res.body).to.have.property('reply');
+    const reply = res.body.reply.toLowerCase();
+    expect(reply).to.include('audit');
+  });
+}
