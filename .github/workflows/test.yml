@@ -170,13 +170,15 @@ jobs:
           GOOGLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----'
           GOOGLE_CALENDAR_ID: 'test@group.calendar.google.com'
 
+      - name: Package build artifact
+        run: tar -czf next-build.tgz .next
+
       - name: Archive build
         uses: actions/upload-artifact@v6
         with:
           name: build
-          path: .next
+          path: next-build.tgz
           retention-days: 7
-          include-hidden-files: true
 
   lighthouse:
     name: Lighthouse Performance
@@ -199,7 +201,10 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: build
-          path: .next
+          path: .
+
+      - name: Extract build artifact
+        run: tar -xzf next-build.tgz
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v12
