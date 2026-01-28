@@ -67,11 +67,14 @@ jobs:
           GOOGLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nplaceholder\n-----END PRIVATE KEY-----'
           GOOGLE_CALENDAR_ID: 'placeholder@group.calendar.google.com'
 
+      - name: Package build artifact
+        run: tar -czf next-build.tgz .next
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         with:
           name: build
-          path: .next/
+          path: next-build.tgz
 
   # Uncomment and configure when ready to auto-deploy
   # deploy:
