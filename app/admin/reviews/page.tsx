@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { sanitizeHtml } from '@/lib/utils';
 import toast, { Toaster } from 'react-hot-toast';
@@ -25,13 +25,7 @@ export default function AdminReviews() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      loadReviews();
-    }
-  }, [status, filter]);
-
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/reviews-simple');
@@ -62,7 +56,13 @@ export default function AdminReviews() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      loadReviews();
+    }
+  }, [status, loadReviews]);
 
   const updateReviewStatus = async (id: string, status: 'approved' | 'rejected') => {
     const loadingToast = toast.loading(`${status === 'approved' ? 'Approving' : 'Rejecting'} review...`);
