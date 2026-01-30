@@ -71,7 +71,7 @@ const uuidSchema = z.string().uuid('Invalid session ID format');
 
 // Phone number validation (optional, flexible format)
 const phoneSchema = z.string()
-  .regex(/^[\d\s\-\+\(\)]{7,20}$/, 'Invalid phone number format')
+  .regex(/^[\d\s\-+()]{7,20}$/, 'Invalid phone number format')
   .optional()
   .or(z.literal(''));
 
