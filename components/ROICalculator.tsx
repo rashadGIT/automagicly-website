@@ -76,6 +76,7 @@ export default function ROICalculator() {
   }, [taskName, timePerTask, timesPerWeek, numberOfPeople, hourlyCost, efficiencyGain, buildCostLevel]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     calculateROI();
   }, [calculateROI]);
 

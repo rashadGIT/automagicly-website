@@ -12,7 +12,7 @@ function getPricingRefusalMessage(): string {
 }
 
 function getDefaultFallbackResponse(): string {
-  return "I\'m here to answer general questions about AutoMagicly\'s automation services. I can help with:\n\n• What tasks we can automate\n• How the AI Audit works\n• Service options (AI Partnership vs One-Off)\n• Tool integrations\n• Typical timelines\n\nFor pricing, custom quotes, or detailed proposals, please schedule a Free AI Audit. How can I help?";
+  return "I'm here to answer general questions about AutoMagicly's automation services. I can help with:\n\n• What tasks we can automate\n• How the AI Audit works\n• Service options (AI Partnership vs One-Off)\n• Tool integrations\n• Typical timelines\n\nFor pricing, custom quotes, or detailed proposals, please schedule a Free AI Audit. How can I help?";
 }
 
 export async function POST(request: NextRequest) {
