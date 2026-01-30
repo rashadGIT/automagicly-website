@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle, AlertTriangle, Zap, ArrowRight, Calendar, Target, Lightbulb, MessageCircle, Trophy } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Zap, ArrowRight, Calendar, Target, Lightbulb, MessageCircle, Trophy, Mail } from 'lucide-react';
 import { PainPoint, Recommendation } from '@/lib/audit-types';
 
 interface AuditResultsProps {
@@ -12,6 +12,8 @@ interface AuditResultsProps {
   onBookConsultation: () => void;
   onRestartAudit: () => void;
   onViewConversation?: () => void;
+  onEmailResults?: () => void;
+  canEmail?: boolean;
 }
 
 export default function AuditResults({
@@ -21,7 +23,9 @@ export default function AuditResults({
   confidence,
   onBookConsultation,
   onRestartAudit,
-  onViewConversation
+  onViewConversation,
+  onEmailResults,
+  canEmail
 }: AuditResultsProps) {
   // Sort recommendations by priority
   const sortedRecommendations = [...recommendations].sort((a, b) => a.priority - b.priority);
@@ -157,15 +161,19 @@ export default function AuditResults({
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                    {rec.priority}
+                    {rec.priority || index + 1}
                   </span>
-                  <h5 className="font-semibold text-gray-900">{rec.title}</h5>
+                  <h5 className="font-semibold text-gray-900">{rec.title || 'Automation Opportunity'}</h5>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${getComplexityColor(rec.complexity)}`}>
-                  {rec.complexity} complexity
-                </span>
+                {rec.complexity && (
+                  <span className={`text-xs px-2 py-1 rounded-full ${getComplexityColor(rec.complexity)}`}>
+                    {rec.complexity} complexity
+                  </span>
+                )}
               </div>
-              <p className="text-gray-600 text-sm mb-3">{rec.description}</p>
+              {rec.description && (
+                <p className="text-gray-600 text-sm mb-3">{rec.description}</p>
+              )}
               {rec.estimatedROI && (
                 <p className="text-sm text-success-600 font-medium">
                   Estimated ROI: {rec.estimatedROI}
@@ -195,12 +203,21 @@ export default function AuditResults({
           {nextSteps || 'Book a free consultation to discuss these recommendations and create your custom automation roadmap.'}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {canEmail && onEmailResults && (
+            <button
+              onClick={onEmailResults}
+              className="btn-secondary flex items-center justify-center gap-2"
+            >
+              <Mail className="w-5 h-5" />
+              Email Results
+            </button>
+          )}
           <button
             onClick={onBookConsultation}
             className="btn-primary flex items-center justify-center gap-2"
           >
             <Calendar className="w-5 h-5" />
-            Book Free Consultation
+            Schedule a Call
             <ArrowRight className="w-4 h-4" />
           </button>
           <button

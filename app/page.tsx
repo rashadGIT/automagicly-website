@@ -6,7 +6,6 @@ import ROICalculator from '@/components/ROICalculator';
 import ExampleAutomations from '@/components/ExampleAutomations';
 import Services from '@/components/Services';
 import HowItWorks from '@/components/HowItWorks';
-import BookingSection from '@/components/BookingSection';
 import ChatWidget from '@/components/ChatWidget';
 import FAQ from '@/components/FAQ';
 import Reviews from '@/components/Reviews';
@@ -30,7 +29,6 @@ export default function Home() {
       <ExampleAutomations />
       <Services />
       <HowItWorks />
-      <BookingSection />
       <FAQ />
       <Reviews />
       <Referrals />

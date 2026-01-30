@@ -1,8 +1,5 @@
 // JSON-LD Structured Data for SEO
 // This helps search engines understand your business and display rich snippets
-// Using next/script to avoid hydration mismatch issues with script type attribute
-
-import Script from 'next/script';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://automagicly.com';
 
@@ -30,8 +27,7 @@ export function OrganizationJsonLd() {
   };
 
   return (
-    <Script
-      id="organization-jsonld"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
     />
@@ -58,8 +54,7 @@ export function LocalBusinessJsonLd() {
   };
 
   return (
-    <Script
-      id="local-business-jsonld"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(businessData) }}
     />
@@ -96,8 +91,7 @@ export function ServiceJsonLd() {
   };
 
   return (
-    <Script
-      id="service-jsonld"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceData) }}
     />
@@ -146,8 +140,7 @@ export function FAQJsonLd() {
   };
 
   return (
-    <Script
-      id="faq-jsonld"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(faqData) }}
     />
@@ -165,8 +158,7 @@ export function WebSiteJsonLd() {
   };
 
   return (
-    <Script
-      id="website-jsonld"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteData) }}
     />
@@ -174,6 +166,7 @@ export function WebSiteJsonLd() {
 }
 
 // Combined component for all JSON-LD schemas
+// Rendered inside <head> in layout.tsx
 export default function JsonLd() {
   return (
     <>

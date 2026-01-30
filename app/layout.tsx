@@ -118,9 +118,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <JsonLd />
+      </head>
       <body className={inter.className}>
         <Providers>{children}</Providers>
-        <JsonLd />
       </body>
     </html>
   );

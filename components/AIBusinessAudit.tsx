@@ -52,14 +52,17 @@ export default function AIBusinessAudit() {
   const [contactErrors, setContactErrors] = useState<Partial<ContactInfo>>({});
   const [milestoneMessage, setMilestoneMessage] = useState<string | null>(null);
   const [showSparkle, setShowSparkle] = useState(false);
+  // Processing state - shows 5-second animation before completion options
+  const [isProcessing, setIsProcessing] = useState(false);
   // Local UI state for completion options screen (before showing full results)
-  const [showCompletionOptions, setShowCompletionOptions] = useState(true);
+  const [showCompletionOptions, setShowCompletionOptions] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevQuestionRef = useRef<number>(questionNumber);
+  const prevStateRef = useRef<string>(state);
 
   // Get suggestions for current question
   // Use AI-generated suggestions from n8n if available, otherwise fall back to hardcoded for Q1-3
@@ -79,6 +82,24 @@ export default function AIBusinessAudit() {
     }
     prevQuestionRef.current = questionNumber;
   }, [questionNumber]);
+
+  // Trigger processing animation when audit completes
+  useEffect(() => {
+    // Only trigger when transitioning TO COMPLETE state
+    if (state === 'COMPLETE' && prevStateRef.current !== 'COMPLETE') {
+      setIsProcessing(true);
+      setShowCompletionOptions(false);
+
+      // Show processing for 5 seconds, then show completion options
+      const timer = setTimeout(() => {
+        setIsProcessing(false);
+        setShowCompletionOptions(true);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+    prevStateRef.current = state;
+  }, [state]);
 
   // Handle suggestion click - submit immediately with sparkle effect
   const handleSuggestionClick = (suggestion: string) => {
@@ -407,9 +428,53 @@ export default function AIBusinessAudit() {
     );
   };
 
-  // Complete state - Show completion options first, then results
+  // Processing Animation Component - shown for 5 seconds before completion options
+  const ProcessingAnimation = () => (
+    <div className="max-w-lg mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card p-12 text-center"
+      >
+        {/* Spinning sparkles icon */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 mx-auto mb-6"
+        >
+          <Sparkles className="w-full h-full text-brand-500" />
+        </motion.div>
+
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Analyzing your responses...
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Building your custom automation recommendations
+        </p>
+
+        {/* Animated dots */}
+        <div className="flex justify-center gap-2">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-2 h-2 bg-brand-500 rounded-full"
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+            />
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  // Complete state - Show processing animation, then completion options, then results
   if (state === 'COMPLETE') {
-    // Show completion options screen first
+    // Show processing animation first (5 seconds)
+    if (isProcessing) {
+      return <ProcessingAnimation />;
+    }
+
+    // Show completion options screen after processing
     if (showCompletionOptions) {
       return (
         <div className="max-w-lg mx-auto">
@@ -523,6 +588,8 @@ export default function AIBusinessAudit() {
             onBookConsultation={scrollToBooking}
             onRestartAudit={resetAudit}
             onViewConversation={() => setShowConversation(true)}
+            onEmailResults={handleEmailResults}
+            canEmail={!emailSent}
           />
         </div>
 
