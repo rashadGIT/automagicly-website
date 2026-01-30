@@ -20,6 +20,12 @@ interface QuestionAnswers {
 
 type ToneOption = 'professional' | 'enthusiastic' | 'casual';
 
+const DEFAULT_ANSWERS: QuestionAnswers = {
+  problem: '',
+  experience: '',
+  results: ''
+};
+
 export default function AIReviewHelper({
   isOpen,
   onClose,
@@ -27,11 +33,7 @@ export default function AIReviewHelper({
   onRatingChange,
   onApplyReview
 }: AIReviewHelperProps) {
-  const [answers, setAnswers] = useState<QuestionAnswers>({
-    problem: '',
-    experience: '',
-    results: ''
-  });
+  const [answers, setAnswers] = useState<QuestionAnswers>(DEFAULT_ANSWERS);
   const [selectedTone, setSelectedTone] = useState<ToneOption>('professional');
   const [generatedReview, setGeneratedReview] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -45,8 +47,12 @@ export default function AIReviewHelper({
       const saved = localStorage.getItem('ai_review_helper_answers');
       if (saved) {
         try {
-          const parsed = JSON.parse(saved);
-          setAnswers(parsed.answers || answers);
+          const parsed = JSON.parse(saved) as {
+            answers?: Partial<QuestionAnswers>;
+            tone?: ToneOption;
+          };
+          const nextAnswers = { ...DEFAULT_ANSWERS, ...(parsed.answers || {}) };
+          setAnswers(nextAnswers);
           setSelectedTone(parsed.tone || 'professional');
         } catch (e) {
           // Log error and clear corrupted data

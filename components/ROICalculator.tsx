@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 import type { ROICalculation } from '@/lib/types';
@@ -42,11 +42,7 @@ export default function ROICalculator() {
 
   const [results, setResults] = useState<ROICalculation | null>(null);
 
-  useEffect(() => {
-    calculateROI();
-  }, [taskName, timePerTask, timesPerWeek, numberOfPeople, hourlyCost, efficiencyGain, buildCostLevel]);
-
-  const calculateROI = () => {
+  const calculateROI = useCallback(() => {
     const buildCost = buildCostPresets[buildCostLevel];
 
     // Calculate time saved
@@ -77,7 +73,11 @@ export default function ROICalculator() {
       paybackMonths,
       netSavings12Months
     });
-  };
+  }, [taskName, timePerTask, timesPerWeek, numberOfPeople, hourlyCost, efficiencyGain, buildCostLevel]);
+
+  useEffect(() => {
+    calculateROI();
+  }, [calculateROI]);
 
   return (
     <section id="roi-calculator" className="py-20 px-4 bg-gradient-to-br from-blue-50 via-purple-50/30 to-white">
