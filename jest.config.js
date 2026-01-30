@@ -15,10 +15,6 @@ const customJestConfig = {
   transformIgnorePatterns: [
     'node_modules/(?!(bad-words|badwords-list)/)',
   ],
-  testMatch: [
-    '**/__tests__/**/*.test.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[jt]s?(x)',
-  ],
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     'components/**/*.{js,jsx,ts,tsx}',

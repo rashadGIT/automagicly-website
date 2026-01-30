@@ -13,7 +13,7 @@ export const createMockFetch = (response: any, ok = true, status = 200) => {
       headers: new Headers(),
       redirected: false,
       statusText: ok ? 'OK' : 'Error',
-      type: 'basic' as ResponseType,
+      type: 'basic',
       url: '',
       clone: function() { return this },
       body: null,
