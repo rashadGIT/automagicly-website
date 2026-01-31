@@ -195,7 +195,7 @@ export default function ComingSoon() {
                     <option value="business-in-a-box">Business-in-a-Box</option>
                     <option value="start-up-in-a-box">Start-Up-in-a-Box</option>
                     <option value="assistant-in-a-box">Assistant-in-a-Box</option>
-                    <option value="both">All products</option>
+                    <option value="all">All products</option>
                   </select>
                 </div>
 
