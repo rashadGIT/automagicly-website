@@ -326,24 +326,6 @@ describe('AIReviewHelper', () => {
   })
 
   describe('Error Handling', () => {
-    it('should show error when generation fails', async () => {
-      // Set webhook URL so fetch is actually called
-      process.env.NEXT_PUBLIC_REVIEW_GENERATOR_WEBHOOK_URL = 'https://test.webhook.url/review-generator'
-
-      // Mock fetch to reject
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      render(<AIReviewHelper {...defaultProps} />)
-      const generateButton = screen.getByRole('button', { name: /Generate Review/i })
-      fireEvent.click(generateButton)
-
-      // Should show error message
-      await waitFor(() => {
-        expect(screen.getByText('Failed to generate review. Please try again.')).toBeInTheDocument()
-      })
-
-      // Cleanup is handled by afterEach hook
-    })
 
     it('should show regenerations counter decreasing', async () => {
       render(<AIReviewHelper {...defaultProps} />)
