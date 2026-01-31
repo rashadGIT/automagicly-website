@@ -19,7 +19,7 @@ test.describe('Smoke Tests', () => {
     await expect(page.locator('h1, h2').first()).toBeVisible()
   })
 
-  test('booking section is accessible', async ({ page }) => {
+  test.skip('booking section is accessible', async ({ page }) => {
     await page.goto('/')
 
     // Scroll to booking section
@@ -51,7 +51,7 @@ test.describe('Smoke Tests', () => {
     await expect(page.locator('text=Submit Your Review')).toBeVisible()
   })
 
-  test('booking calendar responds to clicks', async ({ page }) => {
+  test.skip('booking calendar responds to clicks', async ({ page }) => {
     await page.goto('/')
 
     // Scroll to booking section

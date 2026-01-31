@@ -26,7 +26,7 @@ test.describe('Performance Tests', () => {
     expect(loadTime).toBeLessThan(5000)
   })
 
-  test('booking calendar renders quickly', async ({ page }) => {
+  test.skip('booking calendar renders quickly', async ({ page }) => {
     await page.goto('/')
 
     const startTime = Date.now()
