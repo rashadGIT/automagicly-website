@@ -142,7 +142,11 @@ test.describe('Booking Flow', () => {
 
     // Navigate and interact
     await page.goto('/')
-    await page.locator('text=Schedule Your Free AI Audit').first().scrollIntoViewIfNeeded()
+    await page.locator('text=Get Your Free').first().scrollIntoViewIfNeeded()
+
+    // Click "Talk to an Expert" to reveal the booking calendar
+    await page.locator('button:has-text("Talk to an Expert")').click()
+    await page.waitForTimeout(500) // Wait for animation
 
     await selectCalendarDate(page)
 

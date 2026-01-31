@@ -10,6 +10,14 @@ const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n')
 
 export async function GET(request: NextRequest) {
   try {
+    // Return mock data in CI/test environments to avoid Google API calls
+    if (process.env.CI === 'true' || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL === 'test@test.iam.gserviceaccount.com') {
+      // Return some mock busy dates for realistic E2E testing
+      return NextResponse.json({
+        busyDates: ['2026-01-10', '2026-01-11', '2026-01-12']
+      });
+    }
+
     // Get date range from query params (default to next 60 days)
     const searchParams = request.nextUrl.searchParams;
     const start = searchParams.get('start') ?? undefined;
