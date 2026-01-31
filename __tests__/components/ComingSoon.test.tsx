@@ -49,7 +49,7 @@ describe('ComingSoon', () => {
       render(<ComingSoon />)
       const heading = screen.getByRole('heading', { name: /Assistant-in-a-Box/i })
       expect(heading).toBeInTheDocument()
-      expect(screen.getByText(/Lightweight, quick-start automations/i)).toBeInTheDocument()
+      expect(screen.getByText(/Ready-to-use AI assistants/i)).toBeInTheDocument()
     })
 
     it('should render waitlist form', () => {
@@ -100,8 +100,8 @@ describe('ComingSoon', () => {
     it('should allow changing interest selection', () => {
       render(<ComingSoon />)
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'automation-packs' } })
-      expect(select).toHaveValue('automation-packs')
+      fireEvent.change(select, { target: { value: 'start-up-in-a-box' } })
+      expect(select).toHaveValue('start-up-in-a-box')
     })
 
     it('should have all interest options', () => {
@@ -148,7 +148,7 @@ describe('ComingSoon', () => {
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
 
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'both' } })
+      fireEvent.change(select, { target: { value: 'all' } })
 
       const submitButton = screen.getByRole('button', { name: /Join Waitlist/i })
       fireEvent.click(submitButton)
@@ -161,7 +161,7 @@ describe('ComingSoon', () => {
         expect.anything(),
         expect.objectContaining({
           email: 'test@example.com',
-          interest: 'both',
+          interest: 'all',
         })
       )
     })
@@ -235,7 +235,7 @@ describe('ComingSoon', () => {
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
 
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'automation-packs' } })
+      fireEvent.change(select, { target: { value: 'assistant-in-a-box' } })
 
       const submitButton = screen.getByRole('button', { name: /Join Waitlist/i })
       fireEvent.click(submitButton)
