@@ -108,8 +108,8 @@ describe('ComingSoon', () => {
       render(<ComingSoon />)
       const select = screen.getByLabelText(/I'm interested in/i)
 
-      expect(screen.getByRole('option', { name: /Business-in-a-Box Products/i })).toBeInTheDocument()
-      expect(screen.getByRole('option', { name: /Productized Automation Packs/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /Business-in-a-Box/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /Start-Up-in-a-Box/i })).toBeInTheDocument()
       expect(screen.getByRole('option', { name: /Both/i })).toBeInTheDocument()
     })
   })
