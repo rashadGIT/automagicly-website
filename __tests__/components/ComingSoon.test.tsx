@@ -33,14 +33,21 @@ describe('ComingSoon', () => {
     it('should render Business-in-a-Box product card', () => {
       render(<ComingSoon />)
       // There's both a heading and dropdown option with this text
-      const heading = screen.getByRole('heading', { name: /Business-in-a-Box Products/i })
+      const heading = screen.getByRole('heading', { name: /Business-in-a-Box/i })
       expect(heading).toBeInTheDocument()
       expect(screen.getByText(/Prebuilt automation templates/i)).toBeInTheDocument()
     })
 
-    it('should render Productized Automation Packs card', () => {
+    it('should render Start-Up-in-a-Box card', () => {
       render(<ComingSoon />)
-      const heading = screen.getByRole('heading', { name: /Productized Automation Packs/i })
+      const heading = screen.getByRole('heading', { name: /Start-Up-in-a-Box/i })
+      expect(heading).toBeInTheDocument()
+      expect(screen.getByText(/Lightweight, quick-start automations/i)).toBeInTheDocument()
+    })
+
+    it('should render Assistant-in-a-Box card', () => {
+      render(<ComingSoon />)
+      const heading = screen.getByRole('heading', { name: /Assistant-in-a-Box/i })
       expect(heading).toBeInTheDocument()
       expect(screen.getByText(/Lightweight, quick-start automations/i)).toBeInTheDocument()
     })
