@@ -192,9 +192,9 @@ export default function ComingSoon() {
                     onChange={(e) => setInterest(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="business-in-a-box">Business-in-a-Box Products</option>
-                    <option value="automation-packs">Start-Up-in-a-Box Products</option>
-                    <option value="assistant-in-a-box">Assistant-in-a-Box Products</option>
+                    <option value="business-in-a-box">Business-in-a-Box</option>
+                    <option value="start-up-in-a-box">Start-Up-in-a-Box</option>
+                    <option value="assistant-in-a-box">Assistant-in-a-Box</option>
                     <option value="both">All products</option>
                   </select>
                 </div>

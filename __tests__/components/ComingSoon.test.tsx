@@ -110,6 +110,7 @@ describe('ComingSoon', () => {
 
       expect(screen.getByRole('option', { name: /Business-in-a-Box/i })).toBeInTheDocument()
       expect(screen.getByRole('option', { name: /Start-Up-in-a-Box/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /Assistant-in-a-Box/i })).toBeInTheDocument()
       expect(screen.getByRole('option', { name: /Both/i })).toBeInTheDocument()
     })
   })
