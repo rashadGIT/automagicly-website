@@ -75,7 +75,7 @@ export default function Header() {
               </button>
             ))}
             <button
-              onClick={(e) => handleNavClick(e, 'booking')}
+              onClick={(e) => handleNavClick(e, 'ai-audit')}
               className="btn-primary flex items-center gap-2 !py-2 !px-6"
             >
               <Zap className="w-4 h-4" />
@@ -124,8 +124,8 @@ export default function Header() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: navItems.length * 0.05 }}
-                  onClick={(e) => handleNavClick(e, 'booking')}
-                  onTouchEnd={(e) => handleNavClick(e, 'booking')}
+                  onClick={(e) => handleNavClick(e, 'ai-audit')}
+                  onTouchEnd={(e) => handleNavClick(e, 'ai-audit')}
                   className="btn-primary flex items-center justify-center gap-2 !py-3 cursor-pointer active:opacity-90"
                 >
                   <Zap className="w-4 h-4" />
