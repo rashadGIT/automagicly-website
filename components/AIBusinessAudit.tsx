@@ -23,7 +23,11 @@ const MILESTONE_MESSAGES: Record<number, string> = {
   13: "Final stretch! Building your recommendations...",
 };
 
-export default function AIBusinessAudit() {
+interface AIBusinessAuditProps {
+  onSwitchToBooking?: () => void;
+}
+
+export default function AIBusinessAudit({ onSwitchToBooking }: AIBusinessAuditProps = {}) {
   const {
     sessionId,
     state,
@@ -143,11 +147,17 @@ export default function AIBusinessAudit() {
     }
   };
 
-  // Scroll to booking section
+  // Switch to booking view or scroll to booking section
   const scrollToBooking = () => {
-    const bookingSection = document.getElementById('booking');
-    if (bookingSection) {
-      bookingSection.scrollIntoView({ behavior: 'smooth' });
+    if (onSwitchToBooking) {
+      // Use parent callback to switch to booking mode
+      onSwitchToBooking();
+    } else {
+      // Fallback: try to scroll to booking section (legacy behavior)
+      const bookingSection = document.getElementById('booking') || document.getElementById('ai-audit');
+      if (bookingSection) {
+        bookingSection.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
@@ -183,7 +193,7 @@ export default function AIBusinessAudit() {
   // Handle schedule call from completion options
   const handleScheduleCall = () => {
     setShowCompletionOptions(false);
-    scrollToBooking();
+    scrollToBooking(); // Will use onSwitchToBooking callback if available
   };
 
   // Handle view results now
@@ -501,7 +511,7 @@ export default function AIBusinessAudit() {
             </h3>
             <p className="text-gray-600 mb-6">
               We found <span className="font-semibold text-brand-600">
-                {recommendations.length} opportunity{recommendations.length !== 1 ? 'ies' : 'y'}
+                {recommendations.length} opportunit{recommendations.length !== 1 ? 'ies' : 'y'}
               </span> to automate your business.
             </p>
 
