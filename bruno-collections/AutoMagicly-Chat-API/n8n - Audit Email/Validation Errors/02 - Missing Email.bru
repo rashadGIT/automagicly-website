@@ -1,0 +1,44 @@
+meta {
+  name: 02 - Missing Email
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/webhook-test/audit-email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-email-test-validation-002",
+    "name": "Test User",
+    "painPoints": [],
+    "recommendations": [],
+    "source": "automagicly-website-audit-email",
+    "sentAt": "2026-01-25T12:00:00.000Z"
+  }
+}
+
+docs {
+  Tests that the webhook validates the presence of email.
+
+  Expected: 400 Bad Request (email is required for sending)
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+
+  test("Response indicates validation error", function() {
+    // Check for error in response
+    expect(res.body).to.have.property('error');
+  });
+}

@@ -1,0 +1,33 @@
+meta {
+  name: 01 - Missing Message
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{auditBaseUrl}}/api/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "sessionId": "chat-session-001"
+  }
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Response has validation error", function() {
+    expect(res.body).to.have.property('reply');
+    expect(res.body.reply).to.include('Invalid request data');
+  });
+}

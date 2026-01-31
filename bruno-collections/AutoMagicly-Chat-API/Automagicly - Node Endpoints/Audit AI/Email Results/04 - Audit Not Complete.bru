@@ -1,0 +1,41 @@
+meta {
+  name: 04 - Audit Not Complete
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "sessionId": "{{auditSessionId}}"
+  }
+}
+
+docs {
+  Tests that the endpoint returns 400 when the audit is not complete.
+
+  Prerequisites:
+  - Run "01 - Create Session" first to get a fresh sessionId
+  - Do NOT complete the audit flow (leave it in DISCOVERY or ADAPTIVE state)
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+
+  test("Response has error message", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error).to.equal('Audit not complete');
+  });
+}

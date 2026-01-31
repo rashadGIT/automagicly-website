@@ -1,0 +1,35 @@
+meta {
+  name: 04 - Invalid Content Type
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{auditBaseUrl}}/api/reviews
+  body: text
+  auth: none
+}
+
+headers {
+  Content-Type: text/plain
+  Origin: {{auditBaseUrl}}
+}
+
+body:text {
+  id=test&status=approved
+}
+
+docs {
+  Tests that PATCH requests without JSON Content-Type are rejected.
+  Expected: 400 status with content-type error
+}
+
+tests {
+  test("Status is 400 or 403", function() {
+    expect([400, 403]).to.include(res.status);
+  });
+
+  test("Response has error", function() {
+    expect(res.body).to.have.property('error');
+  });
+}

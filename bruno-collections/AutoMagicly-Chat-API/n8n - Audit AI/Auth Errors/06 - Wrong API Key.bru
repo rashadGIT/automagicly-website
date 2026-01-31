@@ -1,0 +1,29 @@
+meta {
+  name: 06 - Wrong API Key
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: wrong_key_12345
+}
+
+body:json {
+  {
+    "message": "Hello",
+    "sessionId": "test-wrongkey-001"
+  }
+}
+
+tests {
+  test("Status is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+}

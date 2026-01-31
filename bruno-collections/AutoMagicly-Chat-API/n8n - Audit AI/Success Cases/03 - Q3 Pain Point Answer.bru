@@ -1,0 +1,59 @@
+meta {
+  name: 03 - Q3 Pain Point Answer
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-test-001",
+    "message": "My biggest challenge is patient scheduling - we have constant no-shows and double bookings. Also spending too much time on insurance claim follow-ups.",
+    "questionNumber": 3,
+    "state": "DISCOVERY",
+    "conversationHistory": [
+      {"role": "assistant", "content": "What industry do you work in?"},
+      {"role": "user", "content": "Healthcare - I run a small medical practice"},
+      {"role": "assistant", "content": "What does a typical workday look like for you right now?"},
+      {"role": "user", "content": "My typical day involves seeing patients, managing appointments, and handling insurance paperwork. I spend about 3 hours on admin tasks."}
+    ],
+    "currentConfidence": {
+      "I": 0.9,
+      "R": 0.6,
+      "P": 0.2,
+      "M": 0.2,
+      "K": 0
+    }
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has nextQuestion or shouldStop", function() {
+    const hasQuestion = res.body.hasOwnProperty('nextQuestion') && res.body.nextQuestion !== null;
+    const shouldStop = res.body.shouldStop === true;
+    expect(hasQuestion || shouldStop).to.be.true;
+  });
+  
+  test("Pain point confidence increased", function() {
+    expect(res.body.updatedConfidence.P).to.be.greaterThan(0.2);
+  });
+  
+  test("Has derived pain points", function() {
+    expect(res.body.derivedPainPoints).to.be.an('array');
+    expect(res.body.derivedPainPoints.length).to.be.greaterThan(0);
+  });
+}

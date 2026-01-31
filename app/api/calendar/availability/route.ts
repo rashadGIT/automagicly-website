@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const end = searchParams.get('end') ?? undefined;
     const timezone = searchParams.get('timezone') ?? undefined;
 
-    // Validate query parameters
+    // Validate query parameters (always validate, even in CI)
     const validation = bookingQuerySchema.safeParse({ start, end, timezone });
     if (!validation.success) {
       return NextResponse.json({
@@ -24,6 +24,14 @@ export async function GET(request: NextRequest) {
         error: 'Invalid query parameters',
         details: validation.error.issues
       }, { status: 400 });
+    }
+
+    // Return mock data in CI/test environments to avoid Google API calls
+    if (process.env.CI === 'true' || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL === 'test@test.iam.gserviceaccount.com') {
+      // Return some mock busy dates for realistic E2E testing
+      return NextResponse.json({
+        busyDates: ['2026-01-10', '2026-01-11', '2026-01-12']
+      });
     }
 
     const tz = timezone || 'America/New_York';

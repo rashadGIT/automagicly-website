@@ -1,0 +1,54 @@
+meta {
+  name: 05 - Timestamp Validation
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "Hello, what time is it?",
+    "sessionId": "test-timestamp-001",
+    "userEmail": "test@example.com"
+  }
+}
+
+docs {
+  Tests that the response includes a valid timestamp.
+  The timestamp should be an ISO 8601 formatted string.
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has timestamp", function() {
+    expect(res.body).to.have.property('timestamp');
+  });
+
+  test("Timestamp is valid ISO format", function() {
+    const timestamp = res.body.timestamp;
+    const parsed = new Date(timestamp);
+    expect(parsed.toString()).to.not.equal('Invalid Date');
+  });
+
+  test("Timestamp is recent (within last minute)", function() {
+    const timestamp = new Date(res.body.timestamp);
+    const now = new Date();
+    const diffMs = now - timestamp;
+    // Timestamp should be within the last 60 seconds
+    expect(diffMs).to.be.lessThan(60000);
+    expect(diffMs).to.be.greaterThan(-1000); // Allow small clock drift
+  });
+}

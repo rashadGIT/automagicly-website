@@ -135,6 +135,129 @@ describe('n8n Webhook Contracts', () => {
     })
   })
 
+  describe('Audit Email Results Webhook Contract', () => {
+    it('should send audit email data in correct format', async () => {
+      const auditEmailData = {
+        sessionId: 'session-abc-123',
+        email: 'test@example.com',
+        name: 'Test User',
+        painPoints: [
+          { category: 'data-entry', description: 'Too much manual data entry', severity: 'high' },
+          { category: 'scheduling', description: 'Double bookings happen frequently', severity: 'medium' },
+        ],
+        recommendations: [
+          {
+            title: 'Automate Data Entry',
+            description: 'Use n8n workflows to automatically capture form data',
+            complexity: 'medium',
+            priority: 1,
+          },
+          {
+            title: 'Implement Scheduling Automation',
+            description: 'Integrate calendar with booking system',
+            complexity: 'low',
+            priority: 2,
+          },
+        ],
+        nextSteps: 'Schedule a consultation to discuss implementation options.',
+        source: 'automagicly-website-audit-email',
+        sentAt: new Date().toISOString(),
+      }
+
+      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true }),
+      } as Response)
+
+      await fetch('https://test.webhook.url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'test-api-key',
+        },
+        body: JSON.stringify(auditEmailData),
+      })
+
+      const callArgs = fetchSpy.mock.calls[0]
+      const sentBody = JSON.parse(callArgs[1]?.body as string)
+
+      // Verify contract: required fields are present
+      expect(sentBody).toHaveProperty('sessionId')
+      expect(sentBody).toHaveProperty('email')
+      expect(sentBody).toHaveProperty('name')
+      expect(sentBody).toHaveProperty('painPoints')
+      expect(sentBody).toHaveProperty('recommendations')
+      expect(sentBody).toHaveProperty('source')
+      expect(sentBody).toHaveProperty('sentAt')
+
+      // Verify pain points structure
+      expect(Array.isArray(sentBody.painPoints)).toBe(true)
+      if (sentBody.painPoints.length > 0) {
+        expect(sentBody.painPoints[0]).toHaveProperty('category')
+        expect(sentBody.painPoints[0]).toHaveProperty('description')
+        expect(sentBody.painPoints[0]).toHaveProperty('severity')
+        expect(['low', 'medium', 'high']).toContain(sentBody.painPoints[0].severity)
+      }
+
+      // Verify recommendations structure
+      expect(Array.isArray(sentBody.recommendations)).toBe(true)
+      if (sentBody.recommendations.length > 0) {
+        expect(sentBody.recommendations[0]).toHaveProperty('title')
+        expect(sentBody.recommendations[0]).toHaveProperty('description')
+        expect(sentBody.recommendations[0]).toHaveProperty('complexity')
+        expect(sentBody.recommendations[0]).toHaveProperty('priority')
+        expect(['low', 'medium', 'high']).toContain(sentBody.recommendations[0].complexity)
+        expect(typeof sentBody.recommendations[0].priority).toBe('number')
+      }
+
+      // Verify data types
+      expect(typeof sentBody.sessionId).toBe('string')
+      expect(typeof sentBody.email).toBe('string')
+      expect(sentBody.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+
+      // Verify X-API-Key header is present
+      expect(callArgs[1]?.headers).toHaveProperty('X-API-Key')
+
+      fetchSpy.mockRestore()
+    })
+
+    it('should handle empty recommendations array', async () => {
+      const auditEmailData = {
+        sessionId: 'session-abc-123',
+        email: 'test@example.com',
+        name: 'Test User',
+        painPoints: [],
+        recommendations: [],
+        nextSteps: null,
+        source: 'automagicly-website-audit-email',
+        sentAt: new Date().toISOString(),
+      }
+
+      const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true }),
+      } as Response)
+
+      await fetch('https://test.webhook.url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(auditEmailData),
+      })
+
+      const callArgs = fetchSpy.mock.calls[0]
+      const sentBody = JSON.parse(callArgs[1]?.body as string)
+
+      // Empty arrays should be valid
+      expect(sentBody.painPoints).toEqual([])
+      expect(sentBody.recommendations).toEqual([])
+      expect(sentBody.nextSteps).toBeNull()
+
+      fetchSpy.mockRestore()
+    })
+  })
+
   describe('Webhook Response Contract', () => {
     it('should handle successful n8n response', async () => {
       const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({

@@ -1,0 +1,57 @@
+meta {
+  name: 12 - Escalation Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-test-escalate-001",
+    "message": "I need to build a completely custom software system with HIPAA compliance, machine learning predictions, and integration with 15 different hospital systems. Can I speak with someone directly about this?",
+    "questionNumber": 3,
+    "state": "DISCOVERY",
+    "conversationHistory": [
+      {"role": "assistant", "content": "What industry do you work in?"},
+      {"role": "user", "content": "Healthcare technology - I'm building a health tech startup"},
+      {"role": "assistant", "content": "What does a typical workday look like for you right now?"},
+      {"role": "user", "content": "Researching hospital workflows and planning custom software development"}
+    ],
+    "currentConfidence": {
+      "I": 0.8,
+      "R": 0.3,
+      "P": 0.2,
+      "M": 0.1,
+      "K": 0.3
+    }
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("AI recognizes escalation trigger", function() {
+    // When user asks to speak with someone OR needs custom dev beyond automation
+    // AI should either escalate or ask clarifying questions
+    const shouldEscalate = res.body.shouldEscalate === true;
+    const hasNextQuestion = res.body.nextQuestion !== null;
+    expect(shouldEscalate || hasNextQuestion).to.be.true;
+  });
+  
+  test("Response has all required fields", function() {
+    expect(res.body).to.have.property('updatedConfidence');
+    expect(res.body).to.have.property('shouldStop');
+  });
+}

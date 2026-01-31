@@ -26,6 +26,11 @@ export async function checkRateLimit(
   identifier: string,
   isIp: boolean = false
 ): Promise<boolean> {
+  // Skip rate limiting in CI E2E tests (with dummy GitHub Actions credentials)
+  if (process.env.CI === 'true' && process.env.DB_ACCESS_KEY_ID === 'test-key') {
+    return true;
+  }
+
   // Check required environment variables
   if (!process.env.DB_ACCESS_KEY_ID || !process.env.DB_SECRET_ACCESS_KEY) {
     // Fall back to allowing request if DB not configured

@@ -1,0 +1,40 @@
+meta {
+  name: 02 - Create Session No Contact
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/session
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {}
+}
+
+script:post-response {
+  if (res.body.sessionId) {
+    bru.setEnvVar("auditSessionId", res.body.sessionId);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has sessionId", function() {
+    expect(res.body).to.have.property('sessionId');
+  });
+  
+  test("Response has first question", function() {
+    expect(res.body).to.have.property('question');
+  });
+}

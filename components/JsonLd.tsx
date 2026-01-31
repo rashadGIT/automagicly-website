@@ -30,6 +30,7 @@ export function OrganizationJsonLd() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
+      suppressHydrationWarning
     />
   );
 }
@@ -57,6 +58,7 @@ export function LocalBusinessJsonLd() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(businessData) }}
+      suppressHydrationWarning
     />
   );
 }
@@ -94,6 +96,7 @@ export function ServiceJsonLd() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceData) }}
+      suppressHydrationWarning
     />
   );
 }
@@ -143,6 +146,7 @@ export function FAQJsonLd() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(faqData) }}
+      suppressHydrationWarning
     />
   );
 }
@@ -161,11 +165,13 @@ export function WebSiteJsonLd() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteData) }}
+      suppressHydrationWarning
     />
   );
 }
 
 // Combined component for all JSON-LD schemas
+// Rendered inside <head> in layout.tsx
 export default function JsonLd() {
   return (
     <>

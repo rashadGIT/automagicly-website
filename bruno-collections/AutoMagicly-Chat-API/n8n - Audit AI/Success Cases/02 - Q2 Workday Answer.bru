@@ -1,0 +1,50 @@
+meta {
+  name: 02 - Q2 Workday Answer
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-test-001",
+    "message": "My typical day involves seeing patients, managing appointments, and handling insurance paperwork. I spend about 3 hours on admin tasks.",
+    "questionNumber": 2,
+    "state": "DISCOVERY",
+    "conversationHistory": [
+      {"role": "assistant", "content": "What industry do you work in?"},
+      {"role": "user", "content": "Healthcare - I run a small medical practice"}
+    ],
+    "currentConfidence": {
+      "I": 0.9,
+      "R": 0.2,
+      "P": 0.1,
+      "M": 0.1,
+      "K": 0
+    }
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has nextQuestion", function() {
+    expect(res.body).to.have.property('nextQuestion');
+  });
+  
+  test("Role confidence increased", function() {
+    expect(res.body.updatedConfidence.R).to.be.greaterThan(0.2);
+  });
+}

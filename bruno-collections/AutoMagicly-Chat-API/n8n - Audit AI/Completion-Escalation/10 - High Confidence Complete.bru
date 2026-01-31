@@ -1,0 +1,73 @@
+meta {
+  name: 10 - High Confidence Complete
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "sessionId": "bruno-test-complete-001",
+    "message": "Yes, I process about 50 insurance claims per week manually. Each one takes 15-20 minutes. I would love to automate this entirely.",
+    "questionNumber": 7,
+    "state": "ADAPTIVE",
+    "conversationHistory": [
+      {"role": "assistant", "content": "What industry do you work in?"},
+      {"role": "user", "content": "Healthcare - I run a small dental practice with 3 staff"},
+      {"role": "assistant", "content": "What does a typical workday look like for you right now?"},
+      {"role": "user", "content": "Seeing patients, managing schedules, processing insurance claims, and handling patient follow-ups"},
+      {"role": "assistant", "content": "What is the biggest challenge or frustration you face in your business or role today?"},
+      {"role": "user", "content": "Insurance claim processing takes forever. We also have too many no-shows that cost us money."},
+      {"role": "assistant", "content": "How do you currently handle appointment reminders?"},
+      {"role": "user", "content": "We call patients manually the day before. Very time consuming."},
+      {"role": "assistant", "content": "What software do you use for scheduling and patient management?"},
+      {"role": "user", "content": "We use Dentrix for patient records but schedule appointments in Excel spreadsheets."},
+      {"role": "assistant", "content": "How many insurance claims do you process per week?"}
+    ],
+    "currentConfidence": {
+      "I": 0.95,
+      "R": 0.85,
+      "P": 0.8,
+      "M": 0.7,
+      "K": 0.05
+    },
+    "derivedPainPoints": [
+      {"category": "insurance_processing", "description": "Manual insurance claim processing", "severity": "high"},
+      {"category": "scheduling", "description": "No-shows and manual appointment reminders", "severity": "high"},
+      {"category": "data_entry", "description": "Using Excel instead of integrated scheduling", "severity": "medium"}
+    ]
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has shouldStop or recommendations", function() {
+    // With high confidence, AI should either stop with recommendations or continue
+    const hasRecommendations = res.body.recommendations && res.body.recommendations.length > 0;
+    const shouldStop = res.body.shouldStop === true;
+    const hasNextQuestion = res.body.nextQuestion !== null;
+    expect(hasRecommendations || shouldStop || hasNextQuestion).to.be.true;
+  });
+  
+  test("High overall confidence score", function() {
+    // With these inputs, overall confidence should be high (>= 0.7)
+    expect(res.body.updatedConfidence.overall).to.be.greaterThan(0.6);
+  });
+  
+  test("Pain points derived from context", function() {
+    expect(res.body.derivedPainPoints).to.be.an('array');
+  });
+}

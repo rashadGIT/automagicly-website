@@ -1,9 +1,13 @@
 {
   "version": "1",
-  "name": "AutoMagicly Chat API",
+  "name": "AutoMagicly",
   "type": "collection",
   "ignore": [
     "node_modules",
     ".git"
-  ]
+  ],
+  "presets": {
+    "requestType": "graphql",
+    "requestUrl": ""
+  }
 }

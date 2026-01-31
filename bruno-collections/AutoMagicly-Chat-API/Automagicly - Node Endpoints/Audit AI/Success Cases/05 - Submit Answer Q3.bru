@@ -1,0 +1,39 @@
+meta {
+  name: 05 - Submit Answer Q3
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/message
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "sessionId": "{{auditSessionId}}",
+    "message": "My biggest challenge is patient scheduling - we have constant no-shows and double bookings. Also spending too much time on insurance claim follow-ups."
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has state", function() {
+    expect(res.body).to.have.property('state');
+  });
+  
+  test("Transitions to ADAPTIVE after Q3", function() {
+    if (res.body.state !== 'COMPLETE' && res.body.state !== 'ESCALATED') {
+      expect(res.body.state).to.equal('ADAPTIVE');
+    }
+  });
+}

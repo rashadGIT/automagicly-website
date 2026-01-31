@@ -3,7 +3,6 @@
  * Tests for components that primarily display static content
  */
 import { render, screen } from '../utils/test-utils'
-import BookingSection from '@/components/BookingSection'
 import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
 import WhatWeDo from '@/components/WhatWeDo'
@@ -25,13 +24,6 @@ jest.mock('framer-motion', () => ({
 }))
 
 describe('Simple Display Components', () => {
-  describe('BookingSection', () => {
-    it('should render the booking section', () => {
-      const { container } = render(<BookingSection />)
-      expect(container.firstChild).toBeTruthy()
-    })
-  })
-
   describe('Footer', () => {
     it('should render the footer', () => {
       const { container } = render(<Footer />)

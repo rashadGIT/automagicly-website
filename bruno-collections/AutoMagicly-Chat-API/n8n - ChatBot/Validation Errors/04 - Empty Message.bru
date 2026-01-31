@@ -1,0 +1,38 @@
+meta {
+  name: 04 - Empty Message
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "",
+    "sessionId": "test-empty-001",
+    "userEmail": "test@example.com"
+  }
+}
+
+tests {
+  test("Status is 400 for empty message", function() {
+    expect(res.status).to.equal(400);
+  });
+
+  test("Response has error property", function() {
+    expect(res.body).to.have.property('error');
+  });
+
+  test("Error mentions message is required", function() {
+    expect(res.body.error.toLowerCase()).to.include('message');
+  });
+}

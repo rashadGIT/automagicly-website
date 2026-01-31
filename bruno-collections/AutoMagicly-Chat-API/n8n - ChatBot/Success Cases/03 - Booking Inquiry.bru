@@ -1,0 +1,59 @@
+meta {
+  name: 03 - Booking Inquiry
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/webhook/chat
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "I'd like to book a consultation to discuss my business automation needs",
+    "sessionId": "test-booking-001",
+    "userEmail": "prospect@company.com"
+  }
+}
+
+docs {
+  Tests the chatbot's handling of booking/consultation requests.
+
+  Expected: Reply should provide information about scheduling
+  a consultation or guide the user toward booking.
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has reply", function() {
+    expect(res.body).to.have.property('reply');
+    expect(res.body.reply).to.be.a('string');
+  });
+
+  test("Response has sessionId", function() {
+    expect(res.body).to.have.property('sessionId');
+  });
+
+  test("Reply addresses booking request", function() {
+    const reply = res.body.reply.toLowerCase();
+    // Check for booking-related content
+    const hasBookingInfo = reply.includes('consult') ||
+                           reply.includes('schedule') ||
+                           reply.includes('book') ||
+                           reply.includes('call') ||
+                           reply.includes('meeting') ||
+                           reply.includes('appointment') ||
+                           reply.includes('happy to help');
+    expect(hasBookingInfo).to.be.true;
+  });
+}

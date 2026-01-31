@@ -63,3 +63,39 @@ export const reviewSubmissionSchema = z.object({
     .max(2000, 'Review too long (max 2000 characters)'),
   serviceType: z.string().min(1, 'Service type is required').max(100),
 });
+
+// AI Business Audit validation schemas
+
+// UUID format for audit session IDs
+const uuidSchema = z.string().uuid('Invalid session ID format');
+
+// Phone number validation (optional, flexible format)
+const phoneSchema = z.string()
+  .regex(/^[\d\s\-+()]{7,20}$/, 'Invalid phone number format')
+  .optional()
+  .or(z.literal(''));
+
+// Contact info for lead capture
+export const contactInfoSchema = z.object({
+  name: z.string()
+    .min(1, 'Name is required')
+    .max(100, 'Name too long (max 100 characters)'),
+  email: z.string()
+    .email('Invalid email address')
+    .max(255, 'Email too long'),
+  phone: phoneSchema,
+});
+
+// Create new audit session (with contact info)
+export const auditSessionCreateSchema = z.object({
+  resumeSessionId: uuidSchema.optional(),
+  contactInfo: contactInfoSchema.optional(),
+}).optional();
+
+// Continue audit with message
+export const auditMessageSchema = z.object({
+  sessionId: uuidSchema,
+  message: z.string()
+    .min(1, 'Answer cannot be empty')
+    .max(2000, 'Answer too long (max 2000 characters)'),
+});

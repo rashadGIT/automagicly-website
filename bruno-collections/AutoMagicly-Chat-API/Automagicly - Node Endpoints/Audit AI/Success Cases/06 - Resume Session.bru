@@ -1,0 +1,46 @@
+meta {
+  name: 06 - Resume Session
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/session
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "resumeSessionId": "{{auditSessionId}}"
+  }
+}
+
+docs {
+  Tests resuming an existing audit session.
+
+  **IMPORTANT:** Run "01 - Create Session" first to create a session,
+  then run this test to attempt resuming it.
+
+  Expected: 200 status with session data if session exists and is active,
+  or creates a new session if the provided sessionId is invalid/expired.
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response has sessionId", function() {
+    expect(res.body).to.have.property('sessionId');
+  });
+
+  test("Response has question", function() {
+    expect(res.body).to.have.property('question');
+  });
+}

@@ -1,11 +1,11 @@
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import WhatWeDo from '@/components/WhatWeDo';
+import AuditSection from '@/components/AuditSection';
 import ROICalculator from '@/components/ROICalculator';
 import ExampleAutomations from '@/components/ExampleAutomations';
 import Services from '@/components/Services';
 import HowItWorks from '@/components/HowItWorks';
-import BookingSection from '@/components/BookingSection';
 import ChatWidget from '@/components/ChatWidget';
 import FAQ from '@/components/FAQ';
 import Reviews from '@/components/Reviews';
@@ -24,11 +24,11 @@ export default function Home() {
       <Header />
       <Hero />
       <WhatWeDo />
+      <AuditSection />
       <ROICalculator />
       <ExampleAutomations />
       <Services />
       <HowItWorks />
-      <BookingSection />
       <FAQ />
       <Reviews />
       <Referrals />

@@ -1,0 +1,55 @@
+meta {
+  name: 01 - Create Session
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/session
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "contactInfo": {
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567"
+    }
+  }
+}
+
+script:post-response {
+  // Store sessionId for subsequent requests
+  if (res.body.sessionId) {
+    bru.setEnvVar("auditSessionId", res.body.sessionId);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has sessionId", function() {
+    expect(res.body).to.have.property('sessionId');
+  });
+  
+  test("Response has first question", function() {
+    expect(res.body).to.have.property('question');
+  });
+  
+  test("Question number is 1", function() {
+    expect(res.body.questionNumber).to.equal(1);
+  });
+  
+  test("State is DISCOVERY", function() {
+    expect(res.body.state).to.equal('DISCOVERY');
+  });
+}

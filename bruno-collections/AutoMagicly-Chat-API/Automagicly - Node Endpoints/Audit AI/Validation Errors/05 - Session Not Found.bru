@@ -1,0 +1,39 @@
+meta {
+  name: 05 - Session Not Found
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{auditBaseUrl}}/api/audit/message
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{auditBaseUrl}}
+}
+
+body:json {
+  {
+    "sessionId": "non-existent-session-12345",
+    "message": "This session does not exist"
+  }
+}
+
+docs {
+  Tests that messages to non-existent sessions return 404.
+  Expected: 404 status with error message
+}
+
+tests {
+  test("Status is 404", function() {
+    expect(res.status).to.equal(404);
+  });
+
+  test("Response has error", function() {
+    expect(res.body).to.have.property('error');
+    expect(res.body.error.toLowerCase()).to.include('session');
+  });
+}

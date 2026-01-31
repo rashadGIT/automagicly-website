@@ -1,0 +1,41 @@
+meta {
+  name: 01 - Missing SessionId
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook-test/audit-email-results
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "email": "test@example.com",
+    "name": "Test User",
+    "painPoints": [],
+    "recommendations": [],
+    "source": "automagicly-website-audit-email",
+    "sentAt": "2026-01-25T12:00:00.000Z"
+  }
+}
+
+docs {
+  Tests that the webhook validates the presence of sessionId.
+
+  Note: This may succeed if the n8n workflow doesn't validate sessionId.
+  The actual validation happens in the Next.js API endpoint.
+}
+
+tests {
+  test("Status is 200 or 400", function() {
+    // n8n workflow may not validate sessionId - it's optional for email sending
+    expect([200, 400]).to.include(res.status);
+  });
+}

@@ -1,0 +1,40 @@
+meta {
+  name: 09 - Message Too Long
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhook/audit-ai
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "message": "{{longMessage}}",
+    "sessionId": "test-toolong-001"
+  }
+}
+
+script:pre-request {
+  // n8n audit webhook has 2000 char limit
+  const longMessage = "a".repeat(2100);
+  
+  bru.setEnvVar("longMessage", longMessage);
+}
+
+tests {
+  test("Status is 400", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Response has error", function() {
+    expect(res.body).to.have.property('error');
+  });
+}
