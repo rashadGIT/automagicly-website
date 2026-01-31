@@ -33,16 +33,23 @@ describe('ComingSoon', () => {
     it('should render Business-in-a-Box product card', () => {
       render(<ComingSoon />)
       // There's both a heading and dropdown option with this text
-      const heading = screen.getByRole('heading', { name: /Business-in-a-Box Products/i })
+      const heading = screen.getByRole('heading', { name: /Business-in-a-Box/i })
       expect(heading).toBeInTheDocument()
       expect(screen.getByText(/Prebuilt automation templates/i)).toBeInTheDocument()
     })
 
-    it('should render Productized Automation Packs card', () => {
+    it('should render Start-Up-in-a-Box card', () => {
       render(<ComingSoon />)
-      const heading = screen.getByRole('heading', { name: /Productized Automation Packs/i })
+      const heading = screen.getByRole('heading', { name: /Start-Up-in-a-Box/i })
       expect(heading).toBeInTheDocument()
       expect(screen.getByText(/Lightweight, quick-start automations/i)).toBeInTheDocument()
+    })
+
+    it('should render Assistant-in-a-Box card', () => {
+      render(<ComingSoon />)
+      const heading = screen.getByRole('heading', { name: /Assistant-in-a-Box/i })
+      expect(heading).toBeInTheDocument()
+      expect(screen.getByText(/Ready-to-use AI assistants/i)).toBeInTheDocument()
     })
 
     it('should render waitlist form', () => {
@@ -93,17 +100,18 @@ describe('ComingSoon', () => {
     it('should allow changing interest selection', () => {
       render(<ComingSoon />)
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'automation-packs' } })
-      expect(select).toHaveValue('automation-packs')
+      fireEvent.change(select, { target: { value: 'start-up-in-a-box' } })
+      expect(select).toHaveValue('start-up-in-a-box')
     })
 
     it('should have all interest options', () => {
       render(<ComingSoon />)
       const select = screen.getByLabelText(/I'm interested in/i)
 
-      expect(screen.getByRole('option', { name: /Business-in-a-Box Products/i })).toBeInTheDocument()
-      expect(screen.getByRole('option', { name: /Productized Automation Packs/i })).toBeInTheDocument()
-      expect(screen.getByRole('option', { name: /Both/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /Business-in-a-Box/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /Start-Up-in-a-Box/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /Assistant-in-a-Box/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /All Products/i })).toBeInTheDocument()
     })
   })
 
@@ -140,7 +148,7 @@ describe('ComingSoon', () => {
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
 
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'both' } })
+      fireEvent.change(select, { target: { value: 'all' } })
 
       const submitButton = screen.getByRole('button', { name: /Join Waitlist/i })
       fireEvent.click(submitButton)
@@ -153,7 +161,7 @@ describe('ComingSoon', () => {
         expect.anything(),
         expect.objectContaining({
           email: 'test@example.com',
-          interest: 'both',
+          interest: 'all',
         })
       )
     })
@@ -227,7 +235,7 @@ describe('ComingSoon', () => {
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
 
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'automation-packs' } })
+      fireEvent.change(select, { target: { value: 'assistant-in-a-box' } })
 
       const submitButton = screen.getByRole('button', { name: /Join Waitlist/i })
       fireEvent.click(submitButton)

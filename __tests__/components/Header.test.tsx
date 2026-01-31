@@ -123,7 +123,7 @@ describe('Header Component', () => {
       }
     });
 
-    it('should scroll to booking section when Get Started is clicked', async () => {
+    it('should scroll to audit section when Get Started is clicked', async () => {
       render(<Header />);
 
       // Get the first "Get Started" button (desktop version)
@@ -133,7 +133,7 @@ describe('Header Component', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(scrollToElement).toHaveBeenCalledWith('booking');
+      expect(scrollToElement).toHaveBeenCalledWith('ai-audit');
     });
   });
 

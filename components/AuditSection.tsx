@@ -60,7 +60,7 @@ export default function AuditSection() {
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Start AI Audit
+                AI-Powered Audit
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Answer a few questions and get personalized automation recommendations in 2-3 minutes.

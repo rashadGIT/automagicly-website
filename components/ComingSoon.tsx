@@ -56,12 +56,12 @@ export default function ComingSoon() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Business-in-a-Box */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <div className="text-5xl mb-4">📦</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Business-in-a-Box Products
+              Business-in-a-Box
             </h3>
             <p className="text-gray-600 mb-4">
               Prebuilt automation templates for common workflows, ready to deploy in minutes.
@@ -86,11 +86,11 @@ export default function ComingSoon() {
             </ul>
           </div>
 
-          {/* Productized Automation Packs */}
+          {/* Start-Up-in-a-Box */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <div className="text-5xl mb-4">⚡</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Productized Automation Packs
+              Start-Up-in-a-Box
             </h3>
             <p className="text-gray-600 mb-4">
               Lightweight, quick-start automations for common pain points.
@@ -111,6 +111,35 @@ export default function ComingSoon() {
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold">•</span>
                 <span>Fixed scope, fixed price, fast delivery</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Assistant-in-a-Box */}
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="text-5xl mb-4">🤖</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Assistant-in-a-Box
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Ready-to-use AI assistants that plug into your tools and teams.
+            </p>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span>Customer support and FAQ automations</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span>Lead qualification and routing</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span>Internal ops copilots for teams</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 font-bold">•</span>
+                <span>Human handoff built in</span>
               </li>
             </ul>
           </div>
@@ -163,9 +192,10 @@ export default function ComingSoon() {
                     onChange={(e) => setInterest(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="business-in-a-box">Business-in-a-Box Products</option>
-                    <option value="automation-packs">Productized Automation Packs</option>
-                    <option value="both">Both</option>
+                    <option value="business-in-a-box">Business-in-a-Box</option>
+                    <option value="start-up-in-a-box">Start-Up-in-a-Box</option>
+                    <option value="assistant-in-a-box">Assistant-in-a-Box</option>
+                    <option value="all">All products</option>
                   </select>
                 </div>
 

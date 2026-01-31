@@ -393,7 +393,7 @@ export default function CustomBooking() {
                     What's your biggest time-waster?
                   </label>
                   <textarea
-                    rows={3}
+                    rows={11}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     className="input-field"
