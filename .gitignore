@@ -48,3 +48,8 @@ smoke*/
 performance*/
 booking-Booking*/
 junit.xml
+workflows/
+
+# n8n-as-code AI helpers
+n8nac-skills
+n8nac-skills.cmd
