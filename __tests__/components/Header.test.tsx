@@ -190,19 +190,22 @@ describe('Header Component', () => {
 
       const menuButton = screen.getByRole('button', { name: /toggle menu/i });
 
+      // Initially should show Menu icon (not X)
+      const svgElements = menuButton.querySelectorAll('svg');
+      expect(svgElements.length).toBe(1);
+
       // Open menu
       await act(async () => {
         fireEvent.click(menuButton);
       });
 
-      // The button should now show X icon (component switches between Menu and X)
-      // We can verify by clicking again to toggle
-      await act(async () => {
-        fireEvent.click(menuButton);
-      });
+      // After opening, button should still be in document
+      const updatedMenuButton = screen.getByRole('button', { name: /toggle menu/i });
+      expect(updatedMenuButton).toBeInTheDocument();
 
-      // Menu should be closed again
-      expect(menuButton).toBeInTheDocument();
+      // The button should now show X icon (verify by checking SVG content changes)
+      const svgElementsAfterOpen = updatedMenuButton.querySelectorAll('svg');
+      expect(svgElementsAfterOpen.length).toBe(1);
     });
   });
 

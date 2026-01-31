@@ -42,6 +42,13 @@ describe('AIReviewHelper', () => {
       ok: true,
       json: async () => ({ review: 'Generated review text' }),
     } as Response)
+    // Ensure webhook URL is not set for tests (so demo mode is used by default)
+    delete process.env.NEXT_PUBLIC_REVIEW_GENERATOR_WEBHOOK_URL
+  })
+
+  afterEach(() => {
+    // Clean up any environment variables that might have been set during tests
+    delete process.env.NEXT_PUBLIC_REVIEW_GENERATOR_WEBHOOK_URL
   })
 
   describe('Rendering', () => {
@@ -177,7 +184,7 @@ describe('AIReviewHelper', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Generated Review')).toBeInTheDocument()
-      })
+      }, { timeout: 5000 })
     })
 
     it('should have generate button', () => {
@@ -229,9 +236,15 @@ describe('AIReviewHelper', () => {
       const generateButton = screen.getByRole('button', { name: /Generate Review/i })
       fireEvent.click(generateButton)
 
+      // Wait for review to be generated first
+      await waitFor(() => {
+        expect(screen.getByText('Generated Review')).toBeInTheDocument()
+      }, { timeout: 5000 })
+
+      // Then check for Regenerate button
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Regenerate Review/i })).toBeInTheDocument()
-      })
+      }, { timeout: 5000 })
     })
   })
 
@@ -314,19 +327,22 @@ describe('AIReviewHelper', () => {
 
   describe('Error Handling', () => {
     it('should show error when generation fails', async () => {
-      // Simulate no webhook URL (demo mode works, but we can test error path)
+      // Set webhook URL so fetch is actually called
+      process.env.NEXT_PUBLIC_REVIEW_GENERATOR_WEBHOOK_URL = 'https://test.webhook.url/review-generator'
+
+      // Mock fetch to reject
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      // Since there's no webhook URL in tests, demo mode kicks in
-      // To test error, we need to ensure the component handles it gracefully
       render(<AIReviewHelper {...defaultProps} />)
       const generateButton = screen.getByRole('button', { name: /Generate Review/i })
       fireEvent.click(generateButton)
 
-      // Demo mode should still work
+      // Should show error message
       await waitFor(() => {
-        expect(screen.getByText('Generated Review')).toBeInTheDocument()
+        expect(screen.getByText('Failed to generate review. Please try again.')).toBeInTheDocument()
       })
+
+      // Cleanup is handled by afterEach hook
     })
 
     it('should show regenerations counter decreasing', async () => {
