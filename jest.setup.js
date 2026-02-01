@@ -249,6 +249,29 @@ global.IntersectionObserver = class IntersectionObserver {
   }
   unobserve() {}
 }
+
+// Mock framer-motion to remove animation delays in tests
+jest.mock('framer-motion', () => {
+  const actual = jest.requireActual('framer-motion')
+  return {
+    ...actual,
+    motion: new Proxy(actual.motion, {
+      get(target, prop) {
+        return new Proxy(target[prop], {
+          get(innerTarget, innerProp) {
+            if (innerProp === 'defaultProps') {
+              return {}
+            }
+            return typeof innerTarget[innerProp] === 'function'
+              ? innerTarget[innerProp]
+              : innerTarget[innerProp]
+          }
+        })
+      }
+    }),
+    AnimatePresence: ({ children }) => children,
+  }
+})
 // Mock bad-words globally to avoid ES module issues
 jest.mock('bad-words', () => {
   return {
