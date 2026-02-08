@@ -289,3 +289,109 @@ Once your app is deployed:
 ---
 
 **🎉 You're ready to deploy! Follow the steps above and your app will go live successfully.**
+
+---
+
+## 🧪 Test Environment (test.automagicly.ai)
+
+### Overview
+
+The test subdomain provides a staging environment for validating changes before production deployment.
+
+**URLs:**
+- **Production**: https://automagicly.ai (master branch)
+- **Test/Staging**: https://test.automagicly.ai (test branch)
+- **Local Development**: http://localhost:3001 (.env.local)
+
+### Deployment Workflow
+
+```
+feature/* branches
+    ↓ (PR + review)
+test branch → test.automagicly.ai
+    ↓ (testing + validation)
+master branch → automagicly.ai
+```
+
+**Process:**
+1. Merge feature branch to `test` branch
+2. Amplify auto-deploys to test.automagicly.ai
+3. Test thoroughly on test subdomain
+4. After validation, merge `test` to `master` for production
+
+### Environment Differences
+
+**Test environment uses:**
+- Different `NEXTAUTH_URL=https://test.automagicly.ai`
+- Different `NEXTAUTH_SECRET` (generate separate secret)
+- Test n8n webhooks (`/webhook-test/` paths instead of `/webhook/`)
+- Same database, calendar, and other credentials as production
+
+**All test webhook variables must use `/webhook-test/` paths:**
+```bash
+NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL=https://rashadbarnett.app.n8n.cloud/webhook-test/booking
+NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL=https://rashadbarnett.app.n8n.cloud/webhook-test/reviews
+NEXT_PUBLIC_N8N_REVIEW_GENERATOR_WEBHOOK_URL=https://rashadbarnett.app.n8n.cloud/webhook-test/review-generator
+# ... and all other webhooks
+```
+
+### DNS Configuration
+
+**CNAME record in Route 53:**
+- Record name: `test`
+- Record type: `CNAME`
+- Value: `<test-branch>.amplifyapp.com` (from Amplify Console)
+
+**Alternatively, let Amplify manage DNS:**
+1. Amplify Console → test branch → "Domain management"
+2. Add domain → Select automagicly.ai → Add subdomain: `test`
+3. Amplify automatically creates Route 53 records and SSL certificate
+
+### Setting Up Test Branch
+
+If test branch doesn't exist yet:
+
+```bash
+# Create test branch from master
+git checkout master
+git pull origin master
+git checkout -b test
+git push -u origin test
+```
+
+Then in Amplify Console:
+1. Go to "Build settings"
+2. Click "Connect branch"
+3. Select `test` branch
+4. Enable automatic builds on push
+
+### Environment Variables for Test Branch
+
+Configure these in Amplify Console → test branch → Environment variables:
+
+**Critical differences from production:**
+- `NEXTAUTH_URL=https://test.automagicly.ai`
+- `NEXT_PUBLIC_SITE_URL=https://test.automagicly.ai`
+- `NEXTAUTH_SECRET=<generate-new-secret-different-from-prod>`
+- All `NEXT_PUBLIC_N8N_*` webhooks use `/webhook-test/` paths
+- All `N8N_*` webhooks use `/webhook-test/` paths
+
+**Same as production:**
+- All database credentials
+- Google Calendar credentials
+- Admin credentials
+- Supabase credentials
+- API keys
+
+### Verification Checklist
+
+After test environment is deployed:
+
+- [ ] DNS resolves: `nslookup test.automagicly.ai`
+- [ ] HTTPS works: `curl -I https://test.automagicly.ai`
+- [ ] Application loads without errors
+- [ ] Admin login works at `/admin/login`
+- [ ] Test webhooks fire to `/webhook-test/` paths (not `/webhook/`)
+- [ ] Forms submit successfully
+- [ ] Authentication persists correctly
+- [ ] No production webhooks triggered from test
