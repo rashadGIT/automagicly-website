@@ -50,15 +50,15 @@ describe('Rate Limit Module', () => {
 
   describe('checkRateLimit', () => {
     describe('Configuration', () => {
-      it('should allow request when DB not configured', async () => {
+      it('should block request when DB not configured (fail closed)', async () => {
         delete process.env.DB_ACCESS_KEY_ID
         delete process.env.DB_SECRET_ACCESS_KEY
 
         const result = await checkRateLimit('test-identifier')
 
-        expect(result).toBe(true)
-        expect(logger.warn).toHaveBeenCalledWith(
-          'Rate limiting DB not configured, allowing request'
+        expect(result).toBe(false)
+        expect(logger.error).toHaveBeenCalledWith(
+          'Rate limiting DB not configured - BLOCKING request for security'
         )
         expect(mockSend).not.toHaveBeenCalled()
       })
@@ -287,26 +287,30 @@ describe('Rate Limit Module', () => {
     })
 
     describe('Error Handling', () => {
-      it('should allow request on DynamoDB GetItem error (fail open)', async () => {
+      it('should block request on DynamoDB GetItem error (fail closed)', async () => {
         mockSend.mockRejectedValueOnce(new Error('DynamoDB connection failed'))
 
         const result = await checkRateLimit('user-123')
 
-        expect(result).toBe(true)
+        expect(result).toBe(false)
         expect(logger.error).toHaveBeenCalledWith(
-          'Rate limit check failed',
-          {},
+          'Rate limit check failed - BLOCKING request',
+          {
+            identifier: 'user-123',
+            failures: 1,
+            isCircuitOpen: false,
+          },
           expect.any(Error)
         )
       })
 
-      it('should allow request on DynamoDB PutItem error', async () => {
+      it('should block request on DynamoDB PutItem error (fail closed)', async () => {
         mockSend.mockResolvedValueOnce({ Item: undefined })
         mockSend.mockRejectedValueOnce(new Error('PutItem failed'))
 
         const result = await checkRateLimit('user-123')
 
-        expect(result).toBe(true)
+        expect(result).toBe(false)
         expect(logger.error).toHaveBeenCalled()
       })
 

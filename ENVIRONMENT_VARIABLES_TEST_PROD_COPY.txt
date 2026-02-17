@@ -1,0 +1,265 @@
+AutoMagicly - Test Environment Using Production Configuration
+==============================================================
+
+⚠️  IMPORTANT: This configures test.automagicly.ai to use the SAME n8n
+    webhooks as production (not separate /webhook-test/ endpoints)
+
+Copy and paste these into AWS Amplify Console → Environment variables
+for the TEST BRANCH
+
+Go to: AWS Amplify Console → Your App → test branch → Environment variables
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+N8N WEBHOOK URLS (Public - Browser-side)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  Using PRODUCTION /webhook/ endpoints (shared with production)
+
+NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/booking
+
+NEXT_PUBLIC_N8N_REVIEWS_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/reviews
+
+NEXT_PUBLIC_N8N_REFERRALS_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/referrals
+
+NEXT_PUBLIC_N8N_WAITLIST_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/waitlist
+
+NEXT_PUBLIC_N8N_AUDIT_AI_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/audit-ai
+
+NEXT_PUBLIC_N8N_REVIEW_GENERATOR_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/review-generator
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CHAT ASSISTANT (Server-side only, NOT public)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  Using PRODUCTION /webhook/ endpoints (shared with production)
+
+N8N_CHAT_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/chat
+
+N8N_CHAT_API_KEY
+9e9b75e99e1883418181ed35b3cc61a4594cd768022a49d8e65eee36d738071b
+
+N8N_AUDIT_AI_API_KEY
+⚠️  Copy from your .env.production file
+
+N8N_AUDIT_EMAIL_WEBHOOK_URL
+https://rashadbarnett.app.n8n.cloud/webhook/audit-email-results
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEXTAUTH CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  IMPORTANT: These MUST be different for test vs production
+
+NEXTAUTH_URL
+https://test.automagicly.ai
+
+NEXTAUTH_SECRET
+⚠️  MUST BE DIFFERENT from production! Generate with:
+    openssl rand -base64 32
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GOOGLE CALENDAR API (Shared with Production)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GOOGLE_SERVICE_ACCOUNT_EMAIL
+automagicly-calendar-reader@automagicly.iam.gserviceaccount.com
+
+GOOGLE_CALENDAR_ID
+43b775854c475d11df8d6850be20324ab6d73d82eb7c43b4fc6277a6ebeeb6d1@group.calendar.google.com
+
+GOOGLE_PRIVATE_KEY
+⚠️  Copy the entire private key from your .env.production file including:
+-----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY----- lines
+(paste exactly as it appears with \n characters intact)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SUPABASE (Shared with Production)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEXT_PUBLIC_SUPABASE_URL
+https://niuadokiehxkethhrhtp.supabase.co
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+⚠️  Copy from your .env.production file
+
+SUPABASE_SERVICE_ROLE_KEY
+⚠️  Copy from your .env.production file
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DYNAMODB (Shared with Production)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DB_ACCESS_KEY_ID
+⚠️  Copy from your .env.production file
+
+DB_SECRET_ACCESS_KEY
+⚠️  Copy from your .env.production file
+
+REGION
+us-east-1
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ADMIN ACCESS (Shared with Production)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEXT_PUBLIC_ADMIN_PASSWORD
+⚠️  Can be same as production or different (your choice)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLOUDWATCH RUM (Optional - Production Monitoring)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If you have CloudWatch RUM configured in production, copy these:
+
+NEXT_PUBLIC_RUM_APP_ID
+⚠️  Copy from production if using RUM
+
+NEXT_PUBLIC_RUM_IDENTITY_POOL_ID
+⚠️  Copy from production if using RUM
+
+NEXT_PUBLIC_RUM_REGION
+⚠️  Copy from production if using RUM
+
+NEXT_PUBLIC_ENABLE_RUM
+true
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP-BY-STEP INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Open .env.production file locally (contains your secret values)
+
+2. Go to AWS Amplify Console:
+   - Navigate to your app
+   - Click on "test" branch in left sidebar
+   - Click "Environment variables"
+   - Click "Manage variables"
+
+3. For each variable above:
+   - If marked with ⚠️  "Copy from .env.production":
+     * Find the variable in your .env.production file
+     * Copy the actual value
+     * Paste into Amplify
+
+   - If the value is shown (like n8n URLs):
+     * Copy exactly as shown
+
+4. CRITICAL - These MUST be different for test:
+   - NEXTAUTH_URL: https://test.automagicly.ai (not automagicly.ai)
+   - NEXTAUTH_SECRET: Generate new with: openssl rand -base64 32
+
+5. Click "Save" when done
+
+6. Amplify will automatically redeploy the test branch
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After deployment completes:
+
+1. Visit: https://test.automagicly.ai/api/debug-n8n
+
+   Should show:
+   {
+     "pathCheck": {
+       "chatUsesTest": false,  ✅ Using production endpoints
+       "chatUsesProd": true,   ✅ Using production endpoints
+       "auditUsesTest": false  ✅ Using production endpoints
+     },
+     "serverWebhooks": {
+       "chat": "SET",          ✅ Webhook configured
+       "chatUrl": "SET"        ✅ URL set
+     },
+     "apiKeys": {
+       "chatApiKey": "SET"     ✅ API key set
+     }
+   }
+
+2. Test features at https://test.automagicly.ai:
+   - Chat widget → should work
+   - AI Business Audit → should work
+   - Custom booking → should work
+   - Reviews form → should work
+
+3. Check browser DevTools → Network tab:
+   - All n8n requests should return 200 OK
+   - No 404, 401, or CORS errors
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPORTANT NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  Test and Production will share:
+    - Same n8n workflows (/webhook/ endpoints)
+    - Same database (DynamoDB)
+    - Same Google Calendar
+    - Same Supabase instance
+
+✅  This means:
+    - Test data will appear in production database
+    - Test bookings will appear in production calendar
+    - Test reviews will be stored alongside production reviews
+
+💡  If you want test isolation:
+    - Use /webhook-test/ endpoints for test environment
+    - See: ENVIRONMENT_VARIABLES_TEST.txt
+
+🔒  Security:
+    - NEXTAUTH_SECRET must be different for test and production
+    - This prevents session token replay attacks between environments
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+QUICK COPY CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ All NEXT_PUBLIC_N8N_* URLs (use /webhook/ not /webhook-test/)
+□ N8N_CHAT_WEBHOOK_URL (use /webhook/chat)
+□ N8N_CHAT_API_KEY
+□ N8N_AUDIT_AI_API_KEY
+□ N8N_AUDIT_EMAIL_WEBHOOK_URL
+□ NEXTAUTH_URL = https://test.automagicly.ai
+□ NEXTAUTH_SECRET (generate new, don't copy from production!)
+□ GOOGLE_SERVICE_ACCOUNT_EMAIL
+□ GOOGLE_CALENDAR_ID
+□ GOOGLE_PRIVATE_KEY (with \n characters)
+□ NEXT_PUBLIC_SUPABASE_URL
+□ NEXT_PUBLIC_SUPABASE_ANON_KEY
+□ SUPABASE_SERVICE_ROLE_KEY
+□ DB_ACCESS_KEY_ID
+□ DB_SECRET_ACCESS_KEY
+□ REGION
+□ NEXT_PUBLIC_ADMIN_PASSWORD
+□ CloudWatch RUM variables (if using)
+
+After adding all variables → Save → Wait for auto-deployment → Test!

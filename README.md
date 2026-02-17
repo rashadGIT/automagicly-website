@@ -14,6 +14,16 @@ A production-ready, conversion-focused landing page for AutoMagicly, an AI autom
 - **Coming Soon / Waitlist** for future products
 - **No fake content** - all copy is professional and real
 
+## Environments
+
+The project supports multiple deployment environments:
+
+- **Production**: https://automagicly.ai (master branch via AWS Amplify)
+- **Test/Staging**: https://test.automagicly.ai (test branch via AWS Amplify)
+- **Local Development**: http://localhost:3001 (.env.local)
+
+Each environment uses different configurations for webhooks and authentication. See [AMPLIFY_DEPLOYMENT_GUIDE.md](./AMPLIFY_DEPLOYMENT_GUIDE.md) for deployment details.
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)

@@ -9,7 +9,7 @@ const globals = require('globals');
 module.exports = [
   // Ignore patterns (replacing .eslintignore)
   {
-    ignores: ['.next/**', 'out/**', '.swc/**', 'node_modules/**', 'dist/**', 'build/**', 'coverage/**'],
+    ignores: ['.next/**', 'out/**', '.swc/**', 'node_modules/**', 'dist/**', 'build/**', 'coverage/**', '.claude/**'],
   },
 
   // Base ESLint recommended config

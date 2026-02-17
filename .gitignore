@@ -31,7 +31,7 @@ yarn-error.log*
 .env*.local
 .env
 .env.production
-.env.example
+.env.test
 
 # vercel
 .vercel
@@ -53,3 +53,5 @@ workflows/
 # n8n-as-code AI helpers
 n8nac-skills
 n8nac-skills.cmd
+
+.claude/.nextauth-secret-test.txt

@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   // Environment variables are automatically available via process.env in API routes on Amplify
   // No need for serverRuntimeConfig which can cause issues on Amplify SSR
   async headers() {
@@ -43,4 +46,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

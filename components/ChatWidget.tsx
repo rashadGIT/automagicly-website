@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ChatMessage } from '@/lib/types';
 import { getSessionId, scrollToElement } from '@/lib/utils';
 
@@ -25,7 +25,7 @@ export default function ChatWidget() {
     }
   }, [messages]);
 
-  const sendMessage = async (messageText: string) => {
+  const sendMessage = useCallback(async (messageText: string) => {
     if (!messageText.trim()) return;
 
     const userMessage: ChatMessage = {
@@ -71,11 +71,11 @@ export default function ChatWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Stable reference - no dependencies needed
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = useCallback((question: string) => {
     sendMessage(question);
-  };
+  }, [sendMessage]);
 
   return (
     <>
@@ -121,9 +121,9 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
-                key={index}
+                key={message.timestamp}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
@@ -142,7 +142,7 @@ export default function ChatWidget() {
                       <div className="flex flex-wrap gap-1">
                         {message.sources.map((source, idx) => (
                           <span
-                            key={idx}
+                            key={`${message.timestamp}-source-${idx}`}
                             className="px-2 py-0.5 bg-white text-gray-600 text-xs rounded-full border border-gray-200"
                           >
                             {source}
@@ -174,9 +174,9 @@ export default function ChatWidget() {
           {messages.length === 0 && (
             <div className="p-4 border-t border-gray-200">
               <div className="flex flex-wrap gap-2">
-                {quickQuestions.map((question, index) => (
+                {quickQuestions.map((question) => (
                   <button
-                    key={index}
+                    key={question}
                     onClick={() => handleQuickQuestion(question)}
                     className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-full transition-colors"
                   >
