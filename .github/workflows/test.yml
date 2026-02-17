@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [master, main, develop]
 
+permissions: read-all
+
 jobs:
   unit-and-component-tests:
     name: Unit & Component Tests

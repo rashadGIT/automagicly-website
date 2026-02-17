@@ -20,8 +20,13 @@ if (typeof window !== 'undefined') {
     // Fallback: basic sanitization if DOMPurify fails to load
     DOMPurify = {
       sanitize: (dirty: string) => {
-        // Remove all HTML tags as fallback
-        return dirty.replace(/<[^>]*>/g, '');
+        // Entity-encode all HTML special characters as fallback
+        return dirty
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#x27;');
       }
     };
     return DOMPurify;

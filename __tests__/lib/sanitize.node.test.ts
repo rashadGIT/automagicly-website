@@ -32,7 +32,7 @@ describe('sanitize (node)', () => {
     const { sanitizeHtmlAsync } = require('@/lib/sanitize')
     const result = await sanitizeHtmlAsync('<span>ok</span>')
 
-    expect(result).toBe('ok')
+    expect(result).toBe('&lt;span&gt;ok&lt;/span&gt;')
   })
 
   it('should fall back to encoding when sanitize throws', () => {
