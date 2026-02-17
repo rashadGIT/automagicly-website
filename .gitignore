@@ -31,7 +31,7 @@ yarn-error.log*
 .env*.local
 .env
 .env.production
-.env.example
+.env.test
 
 # vercel
 .vercel
@@ -54,4 +54,4 @@ workflows/
 n8nac-skills
 n8nac-skills.cmd
 
-.claude/
+.claude/.nextauth-secret-test.txt
