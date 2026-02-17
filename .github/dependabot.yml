@@ -3,6 +3,7 @@ updates:
   # NPM dependencies
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "test"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -39,6 +40,7 @@ updates:
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "test"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 3
