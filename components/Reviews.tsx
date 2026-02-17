@@ -254,7 +254,7 @@ export default function Reviews() {
 
                 return (
                   <div
-                    key={index}
+                    key={review.approvedAt || review.submittedAt || `review-${index}`}
                     className={`bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 relative ${
                       isExpanded ? 'h-auto' : 'h-[400px]'
                     } flex flex-col`}

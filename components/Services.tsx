@@ -157,7 +157,7 @@ export default function Services() {
                     const Icon = feature.icon;
                     return (
                       <motion.div
-                        key={index}
+                        key={feature.title}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -217,7 +217,7 @@ export default function Services() {
                     const Icon = feature.icon;
                     return (
                       <motion.div
-                        key={index}
+                        key={feature.title}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}

@@ -110,7 +110,7 @@ export default function AuditResults({
           <ul className="space-y-3">
             {painPoints.map((point, index) => (
               <motion.li
-                key={index}
+                key={`${point.category}-${point.description.substring(0, 50)}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
@@ -152,7 +152,7 @@ export default function AuditResults({
         <div className="space-y-4">
           {sortedRecommendations.map((rec, index) => (
             <motion.div
-              key={index}
+              key={rec.title || `rec-${index}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 + index * 0.1 }}
