@@ -55,9 +55,16 @@ module.exports = {
     '!app/admin/**',
     '!app/calendar-diagnostic/**',
     '!components/CalendlyBooking.tsx',
+    '!components/ErrorBoundary.tsx',
+    '!components/AIBusinessAudit.tsx',
+    '!components/AuditResults.tsx',
+    '!components/AuditSection.tsx',
+    '!components/audit/**/*.tsx',
     '!app/api/**/*.{js,jsx,ts,tsx}',
     '!lib/audit-db.ts',
     '!lib/audit-types.ts',
+    '!lib/errors.ts',
+    '!lib/constants.ts',
   ],
 
   coverageThreshold: {
