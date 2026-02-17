@@ -43,9 +43,9 @@ export async function GET() {
 
     // Path analysis
     pathCheck: {
-      chatUsesTest: process.env.N8N_CHAT_WEBHOOK_URL?.includes('/webhook-test/') || false,
-      chatUsesProd: process.env.N8N_CHAT_WEBHOOK_URL?.includes('/webhook/') && !process.env.N8N_CHAT_WEBHOOK_URL?.includes('/webhook-test/') || false,
-      auditUsesTest: process.env.NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL?.includes('/webhook-test/') || false,
+      chatUsesTest: process.env.N8N_CHAT_WEBHOOK_URL?.includes('/webhook/') || false,
+      chatUsesProd: process.env.N8N_CHAT_WEBHOOK_URL?.includes('/webhook/') && !process.env.N8N_CHAT_WEBHOOK_URL?.includes('/webhook/') || false,
+      auditUsesTest: process.env.NEXT_PUBLIC_N8N_AUDIT_WEBHOOK_URL?.includes('/webhook/') || false,
     },
   };
 
@@ -53,7 +53,7 @@ export async function GET() {
   const recommendations: string[] = [];
 
   if (config.pathCheck.chatUsesProd && process.env.NEXTAUTH_URL?.includes('test.')) {
-    recommendations.push('⚠️  N8N_CHAT_WEBHOOK_URL uses /webhook/ but NEXTAUTH_URL indicates test environment. Should use /webhook-test/');
+    recommendations.push('⚠️  N8N_CHAT_WEBHOOK_URL uses /webhook/ but NEXTAUTH_URL indicates test environment. Should use /webhook/');
   }
 
   if (!process.env.N8N_CHAT_WEBHOOK_URL) {
