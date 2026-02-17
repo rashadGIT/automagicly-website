@@ -166,6 +166,17 @@ export const logger = {
   database(operation: string, table: string, context?: LogContext): void {
     log('debug', `Database: ${operation} on ${table}`, context);
   },
+
+  /**
+   * Log audit event for compliance and security tracking
+   */
+  audit(action: string, context?: LogContext): void {
+    log('info', `Audit: ${action}`, {
+      ...context,
+      type: 'audit',
+      auditTimestamp: new Date().toISOString(),
+    });
+  },
 };
 
 export default logger;
