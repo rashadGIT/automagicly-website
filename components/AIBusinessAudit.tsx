@@ -75,6 +75,7 @@ export default function AIBusinessAudit({ onSwitchToBooking }: AIBusinessAuditPr
     if (questionNumber > prevQuestionRef.current) {
       const message = MILESTONE_MESSAGES[questionNumber];
       if (message) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMilestoneMessage(message);
         setTimeout(() => setMilestoneMessage(null), 3000);
       }
@@ -85,6 +86,7 @@ export default function AIBusinessAudit({ onSwitchToBooking }: AIBusinessAuditPr
   // Trigger processing animation when audit completes
   useEffect(() => {
     if (state === 'COMPLETE' && prevStateRef.current !== 'COMPLETE') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsProcessing(true);
       setShowCompletionOptions(false);
 
