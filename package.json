@@ -27,7 +27,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.0.0",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.23.26",
+    "framer-motion": "^12.34.0",
     "googleapis": "^169.0.0",
     "isomorphic-dompurify": "^2.35.0",
     "lucide-react": "^0.563.0",
