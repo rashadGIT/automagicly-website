@@ -83,7 +83,7 @@ export default function ChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 transform hover:scale-110"
           aria-label="Open chat"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,10 +96,10 @@ export default function ChatWidget() {
       {isOpen && (
         <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[600px] sm:max-h-[80vh] bg-white sm:rounded-xl shadow-2xl flex flex-col">
           {/* Header */}
-          <div className="bg-blue-600 text-white p-4 rounded-t-xl flex justify-between items-center">
+          <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white p-4 rounded-t-xl flex justify-between items-center">
             <div>
               <h3 className="font-bold">AutoMagicly Assistant</h3>
-              <p className="text-xs text-blue-100">General help only - no pricing or proposals</p>
+              <p className="text-xs text-brand-100">General help only - no pricing or proposals</p>
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -129,7 +129,7 @@ export default function ChatWidget() {
                 <div
                   className={`max-w-[80%] ${
                     message.role === 'user'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   } rounded-lg`}
                 >
@@ -201,13 +201,13 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask a question..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
               >
                 Send
               </button>

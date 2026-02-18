@@ -44,7 +44,7 @@ describe('Hero Component', () => {
     it('should render both CTA buttons', () => {
       render(<Hero />);
 
-      expect(screen.getByRole('button', { name: /schedule a free ai audit/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /start your free ai audit/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /see what we automate/i })).toBeInTheDocument();
     });
   });
@@ -65,15 +65,15 @@ describe('Hero Component', () => {
   });
 
   describe('CTA Interactions', () => {
-    it('should call scrollToElement with booking when primary CTA is clicked', async () => {
+    it('should call scrollToElement with audit when primary CTA is clicked', async () => {
       render(<Hero />);
 
-      const primaryCTA = screen.getByRole('button', { name: /schedule a free ai audit/i });
+      const primaryCTA = screen.getByRole('button', { name: /start your free ai audit/i });
       await act(async () => {
         fireEvent.click(primaryCTA);
       });
 
-      expect(scrollToElement).toHaveBeenCalledWith('booking');
+      expect(scrollToElement).toHaveBeenCalledWith('audit');
     });
 
     it('should call scrollToElement with examples when secondary CTA is clicked', async () => {

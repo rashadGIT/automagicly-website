@@ -103,31 +103,41 @@ export default function Services() {
           <div className="inline-flex bg-white rounded-xl p-1.5 shadow-xl border border-gray-200">
             <button
               onClick={() => setActiveService('partnership')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                 activeService === 'partnership'
                   ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
-              <Users className="w-4 h-4" />
-              AI Partnership
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                AI Partnership
+              </div>
+              <div className={`text-xs font-medium mt-0.5 ${activeService === 'partnership' ? 'text-brand-100' : 'text-brand-600'}`}>
+                From $497/mo
+              </div>
             </button>
             <button
               onClick={() => setActiveService('oneoff')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                 activeService === 'oneoff'
                   ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
-              <Workflow className="w-4 h-4" />
-              Simple Workflow
+              <div className="flex items-center gap-2">
+                <Workflow className="w-4 h-4" />
+                Simple Workflow
+              </div>
+              <div className={`text-xs font-medium mt-0.5 ${activeService === 'oneoff' ? 'text-brand-100' : 'text-brand-600'}`}>
+                From $500 one-time
+              </div>
             </button>
           </div>
         </motion.div>
 
         {/* Service Cards */}
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto" id="services-cards">
           <AnimatePresence mode="wait">
             {activeService === 'partnership' ? (
               <motion.div
@@ -252,6 +262,7 @@ export default function Services() {
             )}
           </AnimatePresence>
         </div>
+        <p className="text-sm text-gray-500 text-center mt-6">Custom pricing available for larger teams</p>
       </div>
     </section>
   );

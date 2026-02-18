@@ -66,14 +66,14 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <button
-              onClick={() => scrollToElement('booking')}
+              onClick={() => scrollToElement('audit')}
               className="group relative w-full sm:w-auto btn-primary flex items-center justify-center gap-2"
             >
               <Zap className="w-5 h-5" />
-              <span>Schedule a Free AI Audit</span>
+              <span>Start Your Free AI Audit</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
@@ -83,6 +83,16 @@ export default function Hero() {
               See What We Automate
             </button>
           </motion.div>
+
+          {/* Trust nudge */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="text-sm text-gray-500 mt-3 mb-16"
+          >
+            No signup required &bull; Takes 5 minutes
+          </motion.p>
 
           {/* Trust indicators with icons */}
           <motion.div

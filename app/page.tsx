@@ -5,6 +5,10 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import ComponentSkeleton from '@/components/ComponentSkeleton';
 
 // Lazy load below-the-fold components for better performance
+const SocialProof = dynamic(() => import('@/components/SocialProof'), {
+  loading: () => <ComponentSkeleton />,
+});
+
 const WhatWeDo = dynamic(() => import('@/components/WhatWeDo'), {
   loading: () => <ComponentSkeleton />,
 });
@@ -64,6 +68,7 @@ export default function Home() {
     <main className="min-h-screen bg-white">
       <Header />
       <Hero />
+      <SocialProof />
       <WhatWeDo />
       <ErrorBoundary>
         <AuditSection />
