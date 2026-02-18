@@ -26,15 +26,15 @@ export default function Footer() {
             Ready to Automate Your Busywork?
           </h3>
           <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-            Schedule a free AI Audit and discover where automation can save you the most time.
+            Start your free AI Audit and discover where automation can save you the most time.
           </p>
 
           <button
-            onClick={() => scrollToElement('booking')}
+            onClick={() => scrollToElement('audit')}
             className="btn-primary flex items-center gap-2 mx-auto"
           >
             <Zap className="w-5 h-5" />
-            <span>Schedule Your Free AI Audit</span>
+            <span>Start Your Free AI Audit</span>
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
@@ -90,7 +90,7 @@ export default function Footer() {
               </li>
               <li>
                 <button
-                  onClick={() => scrollToElement('booking')}
+                  onClick={() => scrollToElement('audit')}
                   className="text-gray-400 hover:text-brand-400 transition-colors flex items-center gap-2"
                 >
                   <Zap className="w-4 h-4" />

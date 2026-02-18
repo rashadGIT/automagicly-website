@@ -44,21 +44,21 @@ describe('Footer Component', () => {
 
     it('should display the CTA description', () => {
       render(<Footer />)
-      expect(screen.getByText(/Schedule a free AI Audit/)).toBeInTheDocument()
+      expect(screen.getByText(/Start your free AI Audit/)).toBeInTheDocument()
     })
 
-    it('should have the Schedule AI Audit button', () => {
+    it('should have the Start AI Audit button', () => {
       render(<Footer />)
-      expect(screen.getByText('Schedule Your Free AI Audit')).toBeInTheDocument()
+      expect(screen.getByText('Start Your Free AI Audit')).toBeInTheDocument()
     })
 
     it('should call scrollToElement when CTA button is clicked', () => {
       render(<Footer />)
-      const ctaButton = screen.getByText('Schedule Your Free AI Audit')
+      const ctaButton = screen.getByText('Start Your Free AI Audit')
 
       fireEvent.click(ctaButton)
 
-      expect(mockScrollToElement).toHaveBeenCalledWith('booking')
+      expect(mockScrollToElement).toHaveBeenCalledWith('audit')
     })
 
     it('should display the ready badge', () => {
@@ -155,7 +155,7 @@ describe('Footer Component', () => {
 
       fireEvent.click(link)
 
-      expect(mockScrollToElement).toHaveBeenCalledWith('booking')
+      expect(mockScrollToElement).toHaveBeenCalledWith('audit')
     })
   })
 

@@ -20,7 +20,7 @@ export default function ExampleAutomations() {
     {
       title: 'Lead Follow-Up Assistant',
       icon: MessageSquare,
-      iconColor: 'from-blue-500 to-blue-600',
+      iconColor: 'from-brand-500 to-brand-600',
       problem: 'New leads wait hours or days for a response',
       automation: 'AI sends instant, personalized replies and updates CRM',
       outcome: 'Faster response times, higher conversion rates'
@@ -28,7 +28,7 @@ export default function ExampleAutomations() {
     {
       title: 'Invoice & Receipt Processing',
       icon: FileText,
-      iconColor: 'from-emerald-500 to-emerald-600',
+      iconColor: 'from-success-500 to-success-600',
       problem: 'Manual data entry from invoices takes hours each week',
       automation: 'AI extracts data, categorizes, and syncs to accounting software',
       outcome: 'Eliminate data entry errors, save 5-10 hours weekly'
@@ -84,7 +84,7 @@ export default function ExampleAutomations() {
   ];
 
   return (
-    <section id="examples" className="py-20 px-4 bg-gradient-to-br from-white via-slate-50/30 to-white">
+    <section id="examples" className="py-20 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

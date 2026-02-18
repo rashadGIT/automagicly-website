@@ -21,7 +21,7 @@ export default function WhatWeDo() {
       icon: Link2,
       title: 'Integrate your tools',
       description: 'Connect your existing systems - email, CRM, accounting, and more',
-      color: 'from-blue-500 to-cyan-500'
+      color: 'from-brand-500 to-cyan-500'
     },
     {
       icon: Rocket,
@@ -38,7 +38,7 @@ export default function WhatWeDo() {
   ];
 
   return (
-    <section id="what-we-do" className="py-20 px-4 bg-white">
+    <section id="what-we-do" className="py-20 px-4 bg-slate-50">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -67,6 +67,9 @@ export default function WhatWeDo() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="card hover-lift p-6 group"
               >
+                <div className="text-5xl font-black text-gray-100 mb-2 leading-none">
+                  {String(index + 1).padStart(2, '0')}
+                </div>
                 <div className={`w-14 h-14 bg-gradient-to-br ${step.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                   <Icon className="w-7 h-7 text-white" />
                 </div>

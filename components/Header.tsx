@@ -45,10 +45,10 @@ export default function Header() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? 'glass shadow-lg py-3'
-          : 'bg-white/80 backdrop-blur-lg py-4'
+          ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm py-3'
+          : 'bg-transparent py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4">
@@ -56,9 +56,9 @@ export default function Header() {
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-2 text-2xl font-bold gradient-text hover:scale-105 transition-transform"
+            className={`flex items-center gap-2 text-2xl font-bold hover:scale-105 transition-transform ${isScrolled ? 'gradient-text' : 'text-white'}`}
           >
-            <Sparkles className="w-6 h-6 text-brand-600" />
+            <Sparkles className={`w-6 h-6 ${isScrolled ? 'text-brand-600' : 'text-white'}`} />
             <span>AutoMagicly</span>
           </button>
 
@@ -68,7 +68,7 @@ export default function Header() {
               <button
                 key={item.id}
                 onClick={(e) => handleNavClick(e, item.id)}
-                className="text-gray-700 hover:text-brand-600 font-medium transition-colors relative group"
+                className={`font-medium transition-colors relative group ${isScrolled ? 'text-gray-700 hover:text-brand-600' : 'text-white/80 hover:text-white'}`}
               >
                 {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-600 group-hover:w-full transition-all duration-300" />

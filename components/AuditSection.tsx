@@ -12,7 +12,8 @@ export default function AuditSection() {
   const [viewMode, setViewMode] = useState<ViewMode>('choice');
 
   return (
-    <section id="ai-audit" className="py-20 px-4 bg-gradient-to-br from-white via-brand-50/30 to-accent-50/20">
+    <section id="ai-audit" className="py-20 px-4 bg-white relative">
+      <div id="audit" className="absolute -top-20" />
       <div className="max-w-7xl mx-auto">
         {/* Header - always visible */}
         <motion.div

@@ -109,7 +109,7 @@ export default function Referrals() {
               </p>
               <button
                 onClick={() => setSubmitSuccess(false)}
-                className="text-blue-600 hover:underline"
+                className="text-brand-600 hover:underline"
               >
                 Submit Another Referral
               </button>
@@ -128,7 +128,7 @@ export default function Referrals() {
                       required
                       value={formData.yourName}
                       onChange={(e) => setFormData(prev => ({ ...prev, yourName: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input-field"
                     />
                   </div>
 
@@ -142,7 +142,7 @@ export default function Referrals() {
                       required
                       value={formData.yourEmail}
                       onChange={(e) => setFormData(prev => ({ ...prev, yourEmail: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input-field"
                     />
                   </div>
                 </div>
@@ -163,7 +163,7 @@ export default function Referrals() {
                         required
                         value={formData.referralName}
                         onChange={(e) => setFormData(prev => ({ ...prev, referralName: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input-field"
                       />
                     </div>
 
@@ -177,7 +177,7 @@ export default function Referrals() {
                         required
                         value={formData.referralContact}
                         onChange={(e) => setFormData(prev => ({ ...prev, referralContact: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input-field"
                         placeholder="email@example.com or (555) 123-4567"
                       />
                     </div>
@@ -191,7 +191,7 @@ export default function Referrals() {
                         type="text"
                         value={formData.referralCompany}
                         onChange={(e) => setFormData(prev => ({ ...prev, referralCompany: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input-field"
                       />
                     </div>
 
@@ -205,14 +205,14 @@ export default function Referrals() {
                         rows={4}
                         value={formData.helpNeeded}
                         onChange={(e) => setFormData(prev => ({ ...prev, helpNeeded: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input-field"
                         placeholder="e.g., Drowning in manual invoicing, need better lead follow-up..."
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="p-4 bg-brand-50 border border-brand-200 rounded-lg">
                   <p className="text-sm text-gray-700">
                     <strong>We'll reach out respectfully. No spam.</strong> Thank you - referrals help us grow.
                   </p>
@@ -227,7 +227,7 @@ export default function Referrals() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-lg transition-all duration-200"
+                  className="btn-primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Referral'}
                 </button>
@@ -238,7 +238,7 @@ export default function Referrals() {
           {/* Submitted Referrals - Gamified Collapsible */}
           {submittedReferrals.length > 0 && !submitSuccess && (
             <div className="mt-8">
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-200">
+              <div className="bg-gradient-to-r from-purple-50 to-brand-50 rounded-lg p-4 border-2 border-purple-200">
                 <button
                   onClick={() => setShowSubmittedReferrals(!showSubmittedReferrals)}
                   className="w-full flex items-center justify-between"
@@ -275,7 +275,7 @@ export default function Referrals() {
                 <div className="mt-3">
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-brand-500 to-accent-500 h-2 rounded-full transition-all duration-500"
                       style={{width: `${Math.min((submittedReferrals.length / 10) * 100, 100)}%`}}
                     />
                   </div>

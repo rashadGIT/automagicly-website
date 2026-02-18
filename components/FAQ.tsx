@@ -60,8 +60,8 @@ export default function FAQ() {
   };
 
   return (
-    <section id="faq" className="py-20 px-4 bg-gradient-to-br from-white via-slate-50/30 to-white">
-      <div className="max-w-4xl mx-auto">
+    <section id="faq" className="py-20 px-4 bg-slate-50">
+      <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -85,21 +85,17 @@ export default function FAQ() {
           </p>
         </motion.div>
 
-        <div className="space-y-4">
+        <div className="space-y-0">
           {faqs.map((faq, index) => (
-            <motion.div
+            <div
               key={faq.question}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="card overflow-hidden hover-lift"
+              className="border-b border-gray-200 last:border-b-0"
             >
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-brand-50/30 transition-colors group"
+                className="w-full py-5 text-left flex justify-between items-center hover:text-brand-600 transition-colors group"
               >
-                <span className="font-semibold text-gray-900 pr-4 group-hover:text-brand-600 transition-colors">
+                <span className="font-semibold text-gray-900 pr-4 group-hover:text-brand-600 transition-colors text-base">
                   {faq.question}
                 </span>
                 <motion.div
@@ -120,13 +116,13 @@ export default function FAQ() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 pb-4 text-gray-700 leading-relaxed">
+                    <div className="pb-5 text-gray-600 leading-relaxed text-sm">
                       {faq.answer}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Package, Zap, Bot } from 'lucide-react';
 import type { WaitlistFormData } from '@/lib/types';
 import { sendToN8N } from '@/lib/utils';
 
@@ -45,7 +46,7 @@ export default function ComingSoon() {
   };
 
   return (
-    <section id="coming-soon" className="py-20 px-4 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
+    <section id="coming-soon" className="py-20 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -58,8 +59,8 @@ export default function ComingSoon() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Business-in-a-Box */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-5xl mb-4">📦</div>
+          <div className="card p-8">
+            <div className="w-14 h-14 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center mb-4"><Package className="w-7 h-7 text-white" /></div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
               Business-in-a-Box
             </h3>
@@ -68,27 +69,27 @@ export default function ComingSoon() {
             </p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Industry-specific packs (real estate, accounting, salons, home services)</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Pre-configured integrations</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Documentation and training included</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>One-time purchase, yours forever</span>
               </li>
             </ul>
           </div>
 
           {/* Start-Up-in-a-Box */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-5xl mb-4">⚡</div>
+          <div className="card p-8">
+            <div className="w-14 h-14 bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl flex items-center justify-center mb-4"><Zap className="w-7 h-7 text-white" /></div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
               Start-Up-in-a-Box
             </h3>
@@ -97,27 +98,27 @@ export default function ComingSoon() {
             </p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Lead capture & follow-up starter</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Invoice automation bundle</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Customer onboarding kit</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Fixed scope, fixed price, fast delivery</span>
               </li>
             </ul>
           </div>
 
           {/* Assistant-in-a-Box */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-5xl mb-4">🤖</div>
+          <div className="card p-8">
+            <div className="w-14 h-14 bg-gradient-to-br from-success-500 to-success-600 rounded-xl flex items-center justify-center mb-4"><Bot className="w-7 h-7 text-white" /></div>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
               Assistant-in-a-Box
             </h3>
@@ -126,19 +127,19 @@ export default function ComingSoon() {
             </p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Customer support and FAQ automations</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Lead qualification and routing</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Internal ops copilots for teams</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
+                <span className="text-brand-600 font-bold">•</span>
                 <span>Human handoff built in</span>
               </li>
             </ul>
@@ -177,7 +178,7 @@ export default function ComingSoon() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -190,7 +191,7 @@ export default function ComingSoon() {
                     id="waitlist-interest"
                     value={interest}
                     onChange={(e) => setInterest(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="business-in-a-box">Business-in-a-Box</option>
                     <option value="start-up-in-a-box">Start-Up-in-a-Box</option>
@@ -208,7 +209,7 @@ export default function ComingSoon() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-lg transition-all duration-200"
+                  className="btn-primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Joining...' : 'Join Waitlist'}
                 </button>

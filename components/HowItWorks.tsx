@@ -36,7 +36,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 px-4 bg-gradient-to-br from-white via-gray-50/30 to-white">
+    <section id="how-it-works" className="py-20 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -63,7 +63,6 @@ export default function HowItWorks() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => {
-            const Icon = step.icon;
             return (
               <motion.div
                 key={step.number}
@@ -79,18 +78,13 @@ export default function HowItWorks() {
                 )}
 
                 <div className="relative z-10 text-center group">
-                  {/* Number circle with gradient */}
+                  {/* Number circle - consistent brand color */}
                   <motion.div
                     whileHover={{ scale: 1.1 }}
-                    className={`w-16 h-16 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white shadow-xl group-hover:shadow-2xl transition-shadow duration-300`}
+                    className="w-12 h-12 bg-brand-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-lg font-bold shadow-lg"
                   >
                     {step.number}
                   </motion.div>
-
-                  {/* Icon with background */}
-                  <div className="w-16 h-16 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:border-brand-400 group-hover:shadow-lg transition-all duration-300">
-                    <Icon className="w-8 h-8 text-gray-700 group-hover:text-brand-600 transition-colors" />
-                  </div>
 
                   {/* Content */}
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
