@@ -53,6 +53,14 @@ const Footer = dynamic(() => import('@/components/Footer'), {
   loading: () => <ComponentSkeleton />,
 });
 
+const StatsBar = dynamic(() => import('@/components/StatsBar'), {
+  loading: () => <ComponentSkeleton />,
+});
+
+const StickyAuditCTA = dynamic(() => import('@/components/StickyAuditCTA'), {
+  loading: () => null,
+});
+
 // Chat widget - load on demand
 const ChatWidget = dynamic(() => import('@/components/ChatWidget'), {
   loading: () => null, // No loader for chat widget
@@ -69,6 +77,7 @@ export default function Home() {
       <Header />
       <Hero />
       <SocialProof />
+      <StatsBar />
       <WhatWeDo />
       <ErrorBoundary>
         <AuditSection />
@@ -84,6 +93,7 @@ export default function Home() {
       <Referrals />
       <ComingSoon />
       <Footer />
+      <StickyAuditCTA />
       <ErrorBoundary>
         <ChatWidget />
       </ErrorBoundary>
