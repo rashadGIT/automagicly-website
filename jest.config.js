@@ -11,6 +11,9 @@ module.exports = {
   moduleNameMapper: {
     // Mock CSS/style imports (must be before path aliases)
     '\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/styleMock.js',
+    // Use browser CJS build — v3's node build pulls in jsdom+undici (ESM-only),
+    // but Jest already runs in jsdom so the browser build works fine
+    '^isomorphic-dompurify$': '<rootDir>/node_modules/isomorphic-dompurify/dist/browser.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
 
@@ -32,7 +35,7 @@ module.exports = {
   },
 
   transformIgnorePatterns: [
-    'node_modules/(?!(bad-words|badwords-list)/)',
+    'node_modules/(?!(bad-words|badwords-list|isomorphic-dompurify|@exodus)/)',
   ],
 
   collectCoverageFrom: [
