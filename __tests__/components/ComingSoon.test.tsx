@@ -38,13 +38,6 @@ describe('ComingSoon', () => {
       expect(screen.getByText(/Prebuilt automation templates/i)).toBeInTheDocument()
     })
 
-    it('should render Start-Up-in-a-Box card', () => {
-      render(<ComingSoon />)
-      const heading = screen.getByRole('heading', { name: /Start-Up-in-a-Box/i })
-      expect(heading).toBeInTheDocument()
-      expect(screen.getByText(/Lightweight, quick-start automations/i)).toBeInTheDocument()
-    })
-
     it('should render Assistant-in-a-Box card', () => {
       render(<ComingSoon />)
       const heading = screen.getByRole('heading', { name: /Assistant-in-a-Box/i })
@@ -74,13 +67,6 @@ describe('ComingSoon', () => {
       expect(screen.getByText(/One-time purchase, yours forever/i)).toBeInTheDocument()
     })
 
-    it('should list Automation Packs features', () => {
-      render(<ComingSoon />)
-      expect(screen.getByText(/Lead capture & follow-up starter/i)).toBeInTheDocument()
-      expect(screen.getByText(/Invoice automation bundle/i)).toBeInTheDocument()
-      expect(screen.getByText(/Customer onboarding kit/i)).toBeInTheDocument()
-      expect(screen.getByText(/Fixed scope, fixed price, fast delivery/i)).toBeInTheDocument()
-    })
   })
 
   describe('Form Input', () => {
@@ -100,8 +86,8 @@ describe('ComingSoon', () => {
     it('should allow changing interest selection', () => {
       render(<ComingSoon />)
       const select = screen.getByLabelText(/I'm interested in/i)
-      fireEvent.change(select, { target: { value: 'start-up-in-a-box' } })
-      expect(select).toHaveValue('start-up-in-a-box')
+      fireEvent.change(select, { target: { value: 'assistant-in-a-box' } })
+      expect(select).toHaveValue('assistant-in-a-box')
     })
 
     it('should have all interest options', () => {
@@ -109,9 +95,9 @@ describe('ComingSoon', () => {
       const select = screen.getByLabelText(/I'm interested in/i)
 
       expect(screen.getByRole('option', { name: /Business-in-a-Box/i })).toBeInTheDocument()
-      expect(screen.getByRole('option', { name: /Start-Up-in-a-Box/i })).toBeInTheDocument()
       expect(screen.getByRole('option', { name: /Assistant-in-a-Box/i })).toBeInTheDocument()
       expect(screen.getByRole('option', { name: /All Products/i })).toBeInTheDocument()
+      expect(screen.queryByRole('option', { name: /Start-Up-in-a-Box/i })).not.toBeInTheDocument()
     })
   })
 
