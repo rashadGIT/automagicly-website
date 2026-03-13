@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "@eslint/compat": "^1.4.1",
+    "@eslint/compat": "^2.0.2",
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
     "@jest/globals": "^30.2.0",
