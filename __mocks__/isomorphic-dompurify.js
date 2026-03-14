@@ -1,17 +1,19 @@
-// Mock for isomorphic-dompurify — stable across v2 and v3, avoids ESM/jsdom chain
-// Replicates DOMPurify behavior: strips dangerous tags+content, entity-encodes remainder
+// Mock for isomorphic-dompurify — test-only, stable across v2 and v3.
+// Avoids ESM/jsdom chain issues that occur when the real package is imported in Jest.
+// CodeQL suppression below is intentional: this is a test mock, not production sanitization.
 
 const DOMPurify = {
   sanitize: (dirty, _options) => {
     if (!dirty) return '';
 
-    // Strip script/style block elements including their content
+    // Remove script/style blocks and their content
+    // lgtm[js/incomplete-multi-character-sanitization, js/bad-html-filtering-regexp]
     let result = dirty
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '');
+      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '') // lgtm[js/bad-html-filtering-regexp, js/incomplete-multi-character-sanitization]
+      .replace(/<style\b[\s\S]*?<\/style\s*>/gi, ''); // lgtm[js/incomplete-multi-character-sanitization]
 
-    // Strip remaining valid HTML tags (e.g. <img>, <a>, </p>) — keep text content
-    result = result.replace(/<\/?[a-zA-Z][^>]*>/g, '');
+    // Remove remaining valid HTML tags, keep text content
+    result = result.replace(/<\/?[a-zA-Z][^>]*>/g, ''); // lgtm[js/incomplete-multi-character-sanitization]
 
     // Entity-encode remaining HTML special characters
     result = result
