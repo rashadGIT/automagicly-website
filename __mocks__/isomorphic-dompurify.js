@@ -1,19 +1,18 @@
 // Mock for isomorphic-dompurify — test-only, stable across v2 and v3.
 // Avoids ESM/jsdom chain issues that occur when the real package is imported in Jest.
-// CodeQL suppression below is intentional: this is a test mock, not production sanitization.
+// This file is excluded from CodeQL analysis (see .github/workflows/codeql.yml).
 
 const DOMPurify = {
   sanitize: (dirty, _options) => {
     if (!dirty) return '';
 
-    // Remove script/style blocks and their content
-    // lgtm[js/incomplete-multi-character-sanitization, js/bad-html-filtering-regexp]
+    // Remove script/style block elements including their content
     let result = dirty
-      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '') // lgtm[js/bad-html-filtering-regexp, js/incomplete-multi-character-sanitization]
-      .replace(/<style\b[\s\S]*?<\/style\s*>/gi, ''); // lgtm[js/incomplete-multi-character-sanitization]
+      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '')
+      .replace(/<style\b[\s\S]*?<\/style\s*>/gi, '');
 
     // Remove remaining valid HTML tags, keep text content
-    result = result.replace(/<\/?[a-zA-Z][^>]*>/g, ''); // lgtm[js/incomplete-multi-character-sanitization]
+    result = result.replace(/<\/?[a-zA-Z][^>]*>/g, '');
 
     // Entity-encode remaining HTML special characters
     result = result
