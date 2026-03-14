@@ -3,6 +3,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   testTimeout: 10000,
+  coverageProvider: 'v8',
 
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
@@ -11,6 +12,8 @@ module.exports = {
   moduleNameMapper: {
     // Mock CSS/style imports (must be before path aliases)
     '\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/styleMock.js',
+    // Stable mock — avoids ESM/jsdom chain issues across v2 and v3
+    '^isomorphic-dompurify$': '<rootDir>/__mocks__/isomorphic-dompurify.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
 
@@ -32,7 +35,7 @@ module.exports = {
   },
 
   transformIgnorePatterns: [
-    'node_modules/(?!(bad-words|badwords-list)/)',
+    'node_modules/(?!(bad-words|badwords-list|isomorphic-dompurify|@exodus)/)',
   ],
 
   collectCoverageFrom: [

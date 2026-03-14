@@ -28,15 +28,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    ignore:
-      # Ignore major version updates for core frameworks (review manually)
-      - dependency-name: "next"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major"]
-
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"

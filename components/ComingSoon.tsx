@@ -56,7 +56,7 @@ export default function ComingSoon() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 max-w-3xl mx-auto">
           {/* Business-in-a-Box */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <div className="text-5xl mb-4">📦</div>
@@ -82,35 +82,6 @@ export default function ComingSoon() {
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 font-bold">•</span>
                 <span>One-time purchase, yours forever</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Start-Up-in-a-Box */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-5xl mb-4">⚡</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Start-Up-in-a-Box
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Lightweight, quick-start automations for common pain points.
-            </p>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Lead capture & follow-up starter</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Invoice automation bundle</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Customer onboarding kit</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Fixed scope, fixed price, fast delivery</span>
               </li>
             </ul>
           </div>
@@ -193,7 +164,6 @@ export default function ComingSoon() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="business-in-a-box">Business-in-a-Box</option>
-                    <option value="start-up-in-a-box">Start-Up-in-a-Box</option>
                     <option value="assistant-in-a-box">Assistant-in-a-Box</option>
                     <option value="all">All products</option>
                   </select>
