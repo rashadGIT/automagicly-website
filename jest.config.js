@@ -13,7 +13,7 @@ module.exports = {
     '\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/styleMock.js',
     // Use browser CJS build — v3's node build pulls in jsdom+undici (ESM-only),
     // but Jest already runs in jsdom so the browser build works fine
-    '^isomorphic-dompurify$': '<rootDir>/node_modules/isomorphic-dompurify/dist/browser.js',
+    '^isomorphic-dompurify$': '<rootDir>/node_modules/isomorphic-dompurify/browser.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
 
