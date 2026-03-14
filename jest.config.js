@@ -3,6 +3,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   testTimeout: 10000,
+  coverageProvider: 'v8',
 
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
@@ -11,9 +12,8 @@ module.exports = {
   moduleNameMapper: {
     // Mock CSS/style imports (must be before path aliases)
     '\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/styleMock.js',
-    // Use browser CJS build — v3's node build pulls in jsdom+undici (ESM-only),
-    // but Jest already runs in jsdom so the browser build works fine
-    '^isomorphic-dompurify$': '<rootDir>/node_modules/isomorphic-dompurify/browser.js',
+    // Stable mock — avoids ESM/jsdom chain issues across v2 and v3
+    '^isomorphic-dompurify$': '<rootDir>/__mocks__/isomorphic-dompurify.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
 
