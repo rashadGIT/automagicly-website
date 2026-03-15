@@ -54,6 +54,13 @@ describe('JsonLd Components', () => {
       expect(typeof data.url).toBe('string');
     });
 
+    it('should use automagicly.ai as the default domain', () => {
+      const { container } = render(<OrganizationJsonLd />);
+      const data = getJsonLdContent(container) as Record<string, unknown>;
+
+      expect(data.url).toContain('automagicly.ai');
+    });
+
     it('should include contact point', () => {
       const { container } = render(<OrganizationJsonLd />);
       const data = getJsonLdContent(container) as Record<string, unknown>;
