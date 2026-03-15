@@ -5,6 +5,12 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig = {
   reactStrictMode: true,
+  typescript: {
+    // TypeScript errors are caught by `npx tsc --noEmit` in CI lint job.
+    // Disabling build-time check avoids false positives from Turbopack's
+    // stricter generic resolution (e.g. framer-motion v12 TargetAndTransition).
+    ignoreBuildErrors: true,
+  },
   // Environment variables are automatically available via process.env in API routes on Amplify
   // No need for serverRuntimeConfig which can cause issues on Amplify SSR
   async headers() {
