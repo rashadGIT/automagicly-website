@@ -24,10 +24,9 @@ describe('Sitemap', () => {
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should include the homepage', () => {
+    it('should include the homepage as the first entry', () => {
       const result = sitemap();
-      const homepage = result.find((entry) => entry.url.endsWith('.com') || entry.url.endsWith('/'));
-      expect(homepage).toBeDefined();
+      expect(result[0].url).toMatch(/^https?:\/\/[^/]+\/?$/);
     });
 
     it('should have required fields for each entry', () => {
@@ -38,6 +37,11 @@ describe('Sitemap', () => {
         expect(entry).toHaveProperty('changeFrequency');
         expect(entry).toHaveProperty('priority');
       });
+    });
+
+    it('should have 5 entries total', () => {
+      const result = sitemap();
+      expect(result).toHaveLength(5);
     });
   });
 
@@ -61,14 +65,47 @@ describe('Sitemap', () => {
     });
   });
 
+  describe('Section Entries', () => {
+    it('should include /#services section', () => {
+      const result = sitemap();
+      const services = result.find((e) => e.url.includes('/#services'));
+      expect(services).toBeDefined();
+      expect(services?.priority).toBe(0.9);
+      expect(services?.changeFrequency).toBe('monthly');
+    });
+
+    it('should include /#booking section', () => {
+      const result = sitemap();
+      const booking = result.find((e) => e.url.includes('/#booking'));
+      expect(booking).toBeDefined();
+      expect(booking?.priority).toBe(0.9);
+      expect(booking?.changeFrequency).toBe('monthly');
+    });
+
+    it('should include /#reviews section', () => {
+      const result = sitemap();
+      const reviews = result.find((e) => e.url.includes('/#reviews'));
+      expect(reviews).toBeDefined();
+      expect(reviews?.priority).toBe(0.8);
+      expect(reviews?.changeFrequency).toBe('weekly');
+    });
+
+    it('should include /#coming-soon section', () => {
+      const result = sitemap();
+      const comingSoon = result.find((e) => e.url.includes('/#coming-soon'));
+      expect(comingSoon).toBeDefined();
+      expect(comingSoon?.priority).toBe(0.7);
+      expect(comingSoon?.changeFrequency).toBe('monthly');
+    });
+  });
+
   describe('URL Configuration', () => {
-    it('should use default URL when NEXT_PUBLIC_SITE_URL is not set', () => {
+    it('should use automagicly.ai as the default domain', () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
-      // Re-import to get fresh module
       jest.isolateModules(() => {
         const sitemapFresh = require('@/app/sitemap').default;
         const result = sitemapFresh();
-        expect(result[0].url).toContain('automagicly.com');
+        expect(result[0].url).toContain('automagicly.ai');
       });
     });
 
@@ -78,6 +115,18 @@ describe('Sitemap', () => {
         const sitemapFresh = require('@/app/sitemap').default;
         const result = sitemapFresh();
         expect(result[0].url).toBe('https://custom-domain.com');
+      });
+    });
+
+    it('should prefix all section URLs with the site URL', () => {
+      process.env.NEXT_PUBLIC_SITE_URL = 'https://example.com';
+      jest.isolateModules(() => {
+        const sitemapFresh = require('@/app/sitemap').default;
+        const result = sitemapFresh();
+        const sectionEntries = result.filter((e: { url: string }) => e.url.includes('/#'));
+        sectionEntries.forEach((entry: { url: string }) => {
+          expect(entry.url).toMatch(/^https:\/\/example\.com\/#/);
+        });
       });
     });
   });

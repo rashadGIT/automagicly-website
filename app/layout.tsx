@@ -16,7 +16,7 @@ if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test' && !isBuild
 
 const inter = Inter({ subsets: ['latin'] });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://automagicly.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://automagicly.ai';
 
 export const metadata: Metadata = {
   // Basic metadata
@@ -96,11 +96,10 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
 
-  // Verification (add your IDs when you have them)
-  // verification: {
-  //   google: 'your-google-verification-code',
-  //   yandex: 'your-yandex-verification-code',
-  // },
+  // Verification
+  verification: {
+    google: 'lBOQeFfDTmuPBpmjdf68AvrT12yQH_mOmetruGPRe_k',
+  },
 
   // Category
   category: 'technology',

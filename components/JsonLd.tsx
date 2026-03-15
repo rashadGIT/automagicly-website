@@ -1,7 +1,7 @@
 // JSON-LD Structured Data for SEO
 // This helps search engines understand your business and display rich snippets
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://automagicly.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://automagicly.ai';
 
 // Organization Schema
 export function OrganizationJsonLd() {
